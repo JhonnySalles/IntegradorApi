@@ -12,6 +12,30 @@
 		<EnableMsixTooling>true</EnableMsixTooling>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Content Remove="Assets\IntegradorApi-200.ico" />
+	  <Content Remove="Assets\Square44x44Logo.altform-lightunplated_targetsize-16.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-lightunplated_targetsize-24.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-lightunplated_targetsize-256.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-lightunplated_targetsize-32.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-lightunplated_targetsize-48.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-unplated_targetsize-16.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-unplated_targetsize-256.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-unplated_targetsize-32.png" />
+	  <Content Remove="Assets\Square44x44Logo.altform-unplated_targetsize-48.png" />
+	  <Content Remove="Assets\Square44x44Logo.scale-125.png" />
+	  <Content Remove="Assets\Square44x44Logo.scale-150.png" />
+	  <Content Remove="Assets\Square44x44Logo.scale-400.png" />
+	  <Content Remove="Assets\Square44x44Logo.targetsize-16.png" />
+	  <Content Remove="Assets\Square44x44Logo.targetsize-24.png" />
+	  <Content Remove="Assets\Square44x44Logo.targetsize-32.png" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Assets\Square44x44Logo.scale-100.png" />
+	  <None Remove="Assets\Square44x44Logo.targetsize-256.png" />
+	  <None Remove="Assets\Square44x44Logo.targetsize-48.png" />
+	  <None Remove="Assets\Square44x44Logo.targetsize-48_altform-unplated.png" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Content Include="Assets\SplashScreen.scale-200.png" />
@@ -37,6 +61,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
+		<PackageReference Include="H.NotifyIcon.WinUI" Version="2.3.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
@@ -47,12 +72,14 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4948" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250907003" />
+		<PackageReference Include="MySqlConnector" Version="2.4.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
 		<PackageReference Include="Serilog" Version="4.3.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 		<PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="System.Private.Uri" Version="4.3.2" />
 	</ItemGroup>
 
 	<!--
@@ -70,6 +97,7 @@
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
 		<PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
 		<PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+		<DefaultLanguage>pt-br</DefaultLanguage>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -83,5 +111,9 @@
 
 	<ItemGroup>
 		<None Include=".editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\IntegradorApi.Data\IntegradorApi.Data.csproj" />
 	</ItemGroup>
 </Project>
