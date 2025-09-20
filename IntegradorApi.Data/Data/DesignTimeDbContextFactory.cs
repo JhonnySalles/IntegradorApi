@@ -1,22 +1,23 @@
-﻿using Microsoft.EntityFrameworkCore;
+using IntegradorApi.Core;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.IO;
 
 namespace IntegradorApi.Data;
 
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbContext> {
     public AppDbContext CreateDbContext(string[] args) {
+        var startupProjectName = "IntegradorApi";
+
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json")
+            .AddJsonFile($"{startupProjectName}/../appsettings.json", optional: false)
             .Build();
 
         var dbConfig = configuration.GetSection("ConnectionStrings:LocalDatabase");
         string connectionString = $"Server={dbConfig["Address"]};" +
                                   $"Port={dbConfig["Port"]};" +
-                                  $"Database=integradorapi;" +
+                                  $"Database={GlobalConstants.DatabaseName};" +
                                   $"Uid={dbConfig["User"]};" +
                                   $"Pwd={dbConfig["Password"]};";
 

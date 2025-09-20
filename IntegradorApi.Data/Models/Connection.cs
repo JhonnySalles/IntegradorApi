@@ -1,11 +1,12 @@
-﻿using IntegradorApi.Enums;
+using IntegradorApi.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IntegradorApi.Models;
 
 [Table("conexoes")]
-public class Connections {
+public class Connection {
+    [Key]
     [Column("id")]
     public int Id { get; set; }
 
@@ -21,15 +22,15 @@ public class Connections {
     public string Address { get; set; }
 
     [Column("usuario")]
-    public int User { get; set; }
+    public string User { get; set; }
 
     [Column("senha")]
-    public int Password { get; set; }
+    public string Password { get; set; }
 
     [Column("opcional")]
-    public int Optional { get; set; }
+    public string Optional { get; set; }
 
     [Column("ativo")]
-    public int Enabled { get; set; }
+    public Boolean Enabled { get; set; }
 
 }

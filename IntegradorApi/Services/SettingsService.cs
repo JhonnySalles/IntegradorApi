@@ -1,33 +1,53 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.IO;
 
 namespace IntegradorApi.Services;
 
 public class SettingsService {
-    private readonly string _settingsFilePath;
+  private readonly string _settingsFilePath;
 
-    public SettingsService() {
-        _settingsFilePath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+  public SettingsService() {
+    _settingsFilePath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+  }
+
+  public bool GetSincronizacaoStatus() {
+    return AppConfig.Configuration.GetValue<bool>("AppSettings:Sincronizar");
+  }
+
+  public void SaveConnectionSettings(string desc, string addr, string port, string user, string pass) {
+    var json = File.ReadAllText(_settingsFilePath);
+    var jsonObj = JObject.Parse(json);
+
+    var connectionSettings = jsonObj["ConnectionStrings"]?["LocalDatabase"];
+    if (connectionSettings != null) {
+      connectionSettings["Description"] = desc;
+      connectionSettings["Address"] = addr;
+      connectionSettings["Port"] = port;
+      connectionSettings["User"] = user;
+      connectionSettings["Password"] = pass;
     }
 
-    public bool GetSincronizacaoStatus() {
-        return AppConfig.Configuration.GetValue<bool>("AppSettings:Sincronizar");
-    }
+    string output = JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
+    File.WriteAllText(_settingsFilePath, output);
 
-    public void SetSincronizacaoStatus(bool novoStatus) {
-        var json = File.ReadAllText(_settingsFilePath);
-        var jsonObj = JObject.Parse(json);
+    (AppConfig.Configuration as IConfigurationRoot).Reload();
+  }
 
-        if (jsonObj["AppSettings"] == null)
-            jsonObj["AppSettings"] = new JObject();
+  public void SetSincronizacaoStatus(bool novoStatus) {
+    var json = File.ReadAllText(_settingsFilePath);
+    var jsonObj = JObject.Parse(json);
 
-        jsonObj["AppSettings"]["Sincronizar"] = novoStatus;
+    if (jsonObj["AppSettings"] == null)
+      jsonObj["AppSettings"] = new JObject();
 
-        string output = JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
-        File.WriteAllText(_settingsFilePath, output);
+    jsonObj["AppSettings"]["Sincronizar"] = novoStatus;
 
-        (AppConfig.Configuration as IConfigurationRoot).Reload();
-    }
+    string output = JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
+    File.WriteAllText(_settingsFilePath, output);
+
+    (AppConfig.Configuration as IConfigurationRoot).Reload();
+  }
 }
