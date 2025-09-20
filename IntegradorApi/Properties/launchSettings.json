@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "IntegradorApi (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "IntegradorApi (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

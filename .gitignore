@@ -1,0 +1,92 @@
+# Arquivo .gitignore para projetos C# .NET (Visual Studio)
+
+## Comentários do Usuário e Opções do Visual Studio
+# Ignora arquivos de usuário específicos, que guardam configurações de janela, etc.
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Arquivos do Visual Studio e IDEs
+# Ignora a pasta de cache do Visual Studio, que contém configurações da solução.
+.vs/
+
+## Pastas de Build (Compilação)
+# Ignora as pastas de saída do compilador. Essencial.
+[Bb]in/
+[Oo]bj/
+
+## Projetos WinUI 3 e UWP
+# Pastas específicas de build e cache para projetos do Windows App SDK.
+AppPackages/
+BundleArtifacts/
+x64/
+x86/
+ARM/
+ARM64/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload
+*.msix
+*.msixbundle
+*.msixupload
+
+## Arquivos gerados pelo EF Core Migrations
+# Normalmente, a pasta de Migrations é versionada, mas o snapshot do modelo
+# pode ser ignorado se a equipe preferir regenerá-lo.
+# Descomente a linha abaixo se você NÃO quer versionar o snapshot.
+# *ModelSnapshot.cs
+
+## Pacotes NuGet
+# Ignora a pasta de pacotes se você não estiver usando o <PackageReference>.
+# Com os projetos .NET modernos, esta regra é menos necessária, mas é uma boa prática.
+[Pp]ackages/
+*.[Nn]u[Pp]kg/
+*.[Nn]u[Ss]pec/
+
+## Arquivos de Configuração Local
+# Ignora arquivos de configuração que podem conter segredos ou configurações locais.
+# É uma boa prática ter um `appsettings.Development.json` para configurações locais
+# e adicioná-lo ao gitignore.
+appsettings.Development.json
+secrets.json
+
+## Logs e Banco de Dados Local
+# Ignora a pasta de log que criamos.
+[Ll]og/
+[Ll]ogs/
+# Ignora o arquivo de banco de dados SQLite, se usado para testes locais.
+*.db
+*.db-journal
+
+## Arquivos do Sistema Operacional
+# Ignora arquivos de cache e metadados de diferentes SOs.
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+## Arquivos do ReSharper (se você usar)
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## Testes e Cobertura de Código
+# Ignora resultados de testes e relatórios de cobertura.
+[Tt]est[Rr]esult*/
+[Cc]overage*/
+*.trx
+*.coverlet.json
+*.opencover.xml
+
+
+# Ignora o arquivo de configuração principal para não vazar segredos
+appsettings.json
+appsettings.Development.json
+secrets.json

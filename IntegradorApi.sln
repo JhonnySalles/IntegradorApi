@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36511.14 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegradorApi", "IntegradorApi\IntegradorApi.csproj", "{A5787A83-FDDA-4764-939D-9DDFAFCB855E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|ARM64.Build.0 = Debug|ARM64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|x64.ActiveCfg = Debug|x64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|x64.Build.0 = Debug|x64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|x64.Deploy.0 = Debug|x64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|x86.ActiveCfg = Debug|x86
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|x86.Build.0 = Debug|x86
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Debug|x86.Deploy.0 = Debug|x86
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|ARM64.ActiveCfg = Release|ARM64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|ARM64.Build.0 = Release|ARM64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|ARM64.Deploy.0 = Release|ARM64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|x64.ActiveCfg = Release|x64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|x64.Build.0 = Release|x64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|x64.Deploy.0 = Release|x64
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|x86.ActiveCfg = Release|x86
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|x86.Build.0 = Release|x86
+		{A5787A83-FDDA-4764-939D-9DDFAFCB855E}.Release|x86.Deploy.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A0BCF0BB-02CF-41C9-A974-4E73E6EB2040}
+	EndGlobalSection
+EndGlobal
