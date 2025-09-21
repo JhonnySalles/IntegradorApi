@@ -1,4 +1,4 @@
-using IntegradorApi.Models;
+using IntegradorApi.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace IntegradorApi.Data;

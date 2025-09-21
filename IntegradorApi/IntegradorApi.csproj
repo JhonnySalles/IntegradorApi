@@ -114,6 +114,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\IntegradorApi.Api\IntegradorApi.Api.csproj" />
 	  <ProjectReference Include="..\IntegradorApi.Data\IntegradorApi.Data.csproj" />
 	</ItemGroup>
 </Project>

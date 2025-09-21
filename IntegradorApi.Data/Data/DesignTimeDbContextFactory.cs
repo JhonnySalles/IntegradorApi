@@ -1,4 +1,4 @@
-using IntegradorApi.Core;
+using IntegradorApi.Data.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;

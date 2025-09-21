@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IntegradorApi.Models;
+namespace IntegradorApi.Data.Models;
 
 [Table("sincronizacoes")]
 public class Sincronization {
