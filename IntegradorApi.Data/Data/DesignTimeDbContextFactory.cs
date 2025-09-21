@@ -2,11 +2,13 @@ using IntegradorApi.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+//using System.Diagnostics; //-- Forçar o debug
 
 namespace IntegradorApi.Data;
 
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbContext> {
     public AppDbContext CreateDbContext(string[] args) {
+        //Debugger.Launch(); //-- Forçar o debug
         var startupProjectName = "IntegradorApi";
 
         IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -22,8 +24,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
                                   $"Pwd={dbConfig["Password"]};";
 
         var builder = new DbContextOptionsBuilder<AppDbContext>();
-        var serverVersion = new MySqlServerVersion(new Version(8, 1, 0));
-        builder.UseMySql(connectionString, serverVersion);
+        builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 
         return new AppDbContext(builder.Options);
     }

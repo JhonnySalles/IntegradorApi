@@ -1,4 +1,4 @@
-using IntegradorApi.Enums;
+using IntegradorApi.Data.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -30,7 +30,10 @@ public class Connection {
     [Column("opcional")]
     public string Optional { get; set; }
 
+    [Required]
     [Column("ativo")]
     public Boolean Enabled { get; set; }
+
+    public ICollection<Sincronization> Sincronizations { get; set; } = new List<Sincronization>();
 
 }

@@ -1,8 +1,9 @@
 using IntegradorApi.Core;
 using IntegradorApi.Data;
-using IntegradorApi.Enums;
+using IntegradorApi.Data.Enums;
 using IntegradorApi.Models;
 using IntegradorApi.Services;
+using IntegradorApi.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.UI;
@@ -14,6 +15,7 @@ using MySqlConnector;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using WinRT.Interop;
 
@@ -29,7 +31,9 @@ namespace IntegradorApi {
     private AppWindow _appWindow;
 
     private readonly DatabaseService _databaseService;
+    private Connection? _connectEdit = null;
     private ObservableCollection<Connection> SourceConnections { get; set; } = new();
+    private ObservableCollection<ConnectionStatusViewModel> StatusIcons { get; set; } = new();
 
 
     private readonly TimeSpan _initialSyncDelay = TimeSpan.FromMinutes(10);
@@ -51,9 +55,7 @@ namespace IntegradorApi {
                                 $"Pwd={dbConfig["Password"]};";
 
       var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-      var serverVersion = new MySqlServerVersion(new Version(8, 1, 0));
-      optionsBuilder.UseMySql(connectionString, serverVersion);
-
+      optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
       _databaseService = new DatabaseService(optionsBuilder.Options);
 
       var hwnd = WindowNative.GetWindowHandle(this);
@@ -64,6 +66,8 @@ namespace IntegradorApi {
       MyTaskbarIcon.DataContext = this;
 
       LogEventBus.OnLogReceived += AppendLogToUI;
+      StatusConectionsItemsControl.ItemsSource = StatusIcons;
+      SourceDataGrid.ItemsSource = SourceConnections;
     }
 
     private async void OnWindowLoaded(object sender, RoutedEventArgs e) {
@@ -75,6 +79,11 @@ namespace IntegradorApi {
       bool currentState = _settingsService.GetSincronizacaoStatus();
       _settingsService.SetSincronizacaoStatus(!currentState);
       LoadSyncButtonState();
+    }
+
+    private void Pressed_StatusIcon(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e) {
+      if (sender is FrameworkElement element && element.DataContext is ConnectionStatusViewModel statusVm)
+        TestConnectionStatus(statusVm);
     }
 
     private void ButtonClick_ClearLog(object sender, RoutedEventArgs e) {
@@ -150,30 +159,37 @@ namespace IntegradorApi {
         return;
       }
 
-      var newConnection = new Connection {
-        TypeConnection = (ConnectionType)OrigemTipoComboBox.SelectedIndex,
-        Description = OrigemDescricaoTextBox.Text,
-        Address = OrigemEnderecoTextBox.Text,
-        User = OrigemUserTextBox.Text,
-        Password = OrigemPasswordTextBox.Text,
-        Optional = OrigemOptionalTextBox.Text,
-        Enabled = OrigemEnabledCheckBox.IsChecked ?? false
-      };
+      if (_connectEdit != null) {
+        _connectEdit.TypeConnection = (ConnectionType)OrigemTipoComboBox.SelectedIndex;
+        _connectEdit.Description = OrigemDescricaoTextBox.Text;
+        _connectEdit.Address = OrigemEnderecoTextBox.Text;
+        _connectEdit.User = OrigemUserTextBox.Text;
+        _connectEdit.Password = OrigemPasswordTextBox.Text;
+        _connectEdit.Optional = OrigemOptionalTextBox.Text;
+        _connectEdit.Enabled = OrigemEnabledCheckBox.IsChecked ?? false;
 
-      await _databaseService.AddConnectionAsync(newConnection);
-      SourceConnections.Add(newConnection);
+        await _databaseService.UpdateConnectionAsync(_connectEdit);
+      } else {
+        var newConnection = new Connection {
+          TypeConnection = (ConnectionType)OrigemTipoComboBox.SelectedIndex,
+          Description = OrigemDescricaoTextBox.Text,
+          Address = OrigemEnderecoTextBox.Text,
+          User = OrigemUserTextBox.Text,
+          Password = OrigemPasswordTextBox.Text,
+          Optional = OrigemOptionalTextBox.Text,
+          Enabled = OrigemEnabledCheckBox.IsChecked ?? false
+        };
 
-      OrigemTipoComboBox.SelectedIndex = -1;
-      OrigemDescricaoTextBox.Text = string.Empty;
-      OrigemEnderecoTextBox.Text = string.Empty;
-      OrigemUserTextBox.Text = string.Empty;
-      OrigemPasswordTextBox.Text = string.Empty;
-      OrigemOptionalTextBox.Text = string.Empty;
-      OrigemEnabledCheckBox.IsChecked = true;
+        await _databaseService.AddConnectionAsync(newConnection);
+        SourceConnections.Add(newConnection);
+      }
+
+      RefreshStatusIcons();
+      ClearSourceForm();
     }
 
     private async void Click_DeleteSource(object sender, RoutedEventArgs e) {
-      var selectedConnection = OrigemDataGrid.SelectedItem as Connection;
+      var selectedConnection = SourceDataGrid.SelectedItem as Connection;
       if (selectedConnection == null) {
         await ShowMessageDialog("Nenhum item selecionado", "Por favor, selecione uma conexão na grid para excluir.");
         return;
@@ -181,13 +197,22 @@ namespace IntegradorApi {
 
       await _databaseService.DeleteConnectionAsync(selectedConnection);
       SourceConnections.Remove(selectedConnection);
+      RefreshStatusIcons();
     }
 
     private async void Click_SourceEnabled(object sender, RoutedEventArgs e) {
       var checkBox = sender as CheckBox;
       var connectionToUpdate = checkBox?.DataContext as Connection;
-      if (connectionToUpdate != null)
+      if (connectionToUpdate != null) {
         await _databaseService.UpdateConnectionAsync(connectionToUpdate);
+        RefreshStatusIcons();
+      }
+    }
+
+    private async void Click_TestGridConnection(object sender, RoutedEventArgs e) {
+      if (sender is FrameworkElement element && element.DataContext is Connection connection)
+        await TestSingleConnection(connection);
+
     }
 
     private async Task ShowMessageDialog(string title, string content) {
@@ -205,6 +230,82 @@ namespace IntegradorApi {
 
     private void Show() {
       _appWindow.Show();
+    }
+
+    private void DoubleTapped_SourceDataGrid(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e) {
+      var selectedConnection = SourceDataGrid.SelectedItem as Connection;
+      if (selectedConnection == null)
+        return;
+
+
+      _connectEdit = selectedConnection;
+      OrigemDescricaoTextBox.Text = _connectEdit.Description;
+      OrigemEnderecoTextBox.Text = _connectEdit.Address;
+      OrigemUserTextBox.Text = _connectEdit.User;
+      OrigemPasswordTextBox.Text = _connectEdit.Password;
+      OrigemOptionalTextBox.Text = _connectEdit.Optional;
+      OrigemEnabledCheckBox.IsChecked = _connectEdit.Enabled;
+      OrigemTipoComboBox.SelectedIndex = (int)_connectEdit.TypeConnection;
+
+      AdicionarOrigemButton.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new SymbolIcon(Symbol.Save), new TextBlock { Text = "Atualizar" } } };
+    }
+
+    private void ClearSourceForm() {
+      _connectEdit = null;
+      OrigemTipoComboBox.SelectedIndex = -1;
+      OrigemDescricaoTextBox.Text = string.Empty;
+      OrigemEnderecoTextBox.Text = string.Empty;
+      OrigemUserTextBox.Text = string.Empty;
+      OrigemPasswordTextBox.Text = string.Empty;
+      OrigemOptionalTextBox.Text = string.Empty;
+      OrigemEnabledCheckBox.IsChecked = true;
+      AdicionarOrigemButton.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new SymbolIcon(Symbol.Add), new TextBlock { Text = "Adicionar" } } };
+    }
+
+    private void RefreshStatusIcons() {
+      StatusIcons.Clear();
+      foreach (var connection in SourceConnections.Where(c => c.Enabled))
+        StatusIcons.Add(new ConnectionStatusViewModel(connection));
+    }
+
+    private async void TestConnectionStatus(ConnectionStatusViewModel statusVm) {
+      statusVm.StatusBrush = new SolidColorBrush(Colors.Yellow);
+
+      var connStringBuilder = new MySqlConnectionStringBuilder {
+        Server = statusVm.Connection.Address,
+        Port = Convert.ToUInt32(TxtLocalDataBasePort.Text),
+        UserID = statusVm.Connection.User,
+        Password = statusVm.Connection.Password,
+        Database = GlobalConstants.DatabaseName,
+        ConnectionTimeout = 5
+      };
+
+      try {
+        await using var connection = new MySqlConnection(connStringBuilder.ConnectionString);
+        await connection.OpenAsync();
+        statusVm.StatusBrush = new SolidColorBrush(Colors.Green);
+      } catch (Exception) {
+        statusVm.StatusBrush = new SolidColorBrush(Colors.Red);
+      }
+    }
+
+    private async Task TestSingleConnection(Connection connection) {
+      var connStringBuilder = new MySqlConnectionStringBuilder {
+        Server = connection.Address,
+        Port = Convert.ToUInt32(TxtLocalDataBasePort.Text),
+        UserID = connection.User,
+        Password = connection.Password,
+        Database = GlobalConstants.DatabaseName,
+        ConnectionTimeout = 5
+      };
+
+      try {
+        await using var mysqlConn = new MySqlConnection(connStringBuilder.ConnectionString);
+        await mysqlConn.OpenAsync();
+        await ShowMessageDialog("Sucesso!", $"A conexão '{connection.Description}' foi estabelecida com sucesso.");
+      } catch (Exception ex) {
+        await ShowMessageDialog("Falha na Conexão", $"Não foi possível conectar em '{connection.Description}'.\n\nErro: {ex.Message}");
+      }
     }
 
     private void AppendLogToUI(string message) {
@@ -242,8 +343,7 @@ namespace IntegradorApi {
     private async Task ApplyMigrationsAsync() {
       Log.Information("Verificando e aplicando migrações do banco de dados...");
       try {
-        await using var context = new AppDbContext();
-        await context.Database.MigrateAsync();
+        await _databaseService.CreateDbContext().Database.MigrateAsync();
         Log.Information("Banco de dados está atualizado.");
       } catch (System.Exception ex) {
         Log.Fatal(ex, "Falha ao aplicar migrações do banco de dados. Verifique as configurações de conexão.");
@@ -252,12 +352,15 @@ namespace IntegradorApi {
     }
 
     private async Task LoadSourceDataGridAsync() {
+      Log.Information("Carregando os dados.");
       try {
         var connections = await _databaseService.GetConnectionsAsync();
         DispatcherQueue.TryEnqueue(() => {
           SourceConnections.Clear();
           foreach (var conn in connections)
             SourceConnections.Add(conn);
+
+          RefreshStatusIcons();
         });
       } catch (Exception ex) {
         DispatcherQueue.TryEnqueue(async () => {
@@ -308,7 +411,7 @@ namespace IntegradorApi {
       // Limpa os ícones atuais
       StatusConectionsItemsControl.Items.Clear();
 
-      // Supondo que você tenha uma lista de conexões (ex: List<ConexaoOrigem> conexoes)
+      // Supondo que você tenha uma lista de conexões (ex: List<Connection> conexoes)
       // foreach (var conexao in conexoes)
       // {
       //     var icon = new FontIcon

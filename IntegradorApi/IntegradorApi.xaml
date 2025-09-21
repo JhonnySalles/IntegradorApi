@@ -9,7 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     mc:Ignorable="d"
-    xmlns:h="using:H.NotifyIcon">
+    xmlns:h="using:H.NotifyIcon"
+    xmlns:viewmodels="using:IntegradorApi.ViewModels">
 
     <Grid x:Name="RootGrid" Loaded="OnWindowLoaded">
         <TabView IsAddTabButtonVisible="False" VerticalAlignment="Stretch">
@@ -42,6 +43,19 @@
                                                 <StackPanel Orientation="Horizontal" Spacing="15"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="viewmodels:ConnectionStatusViewModel">
+                                                <Grid>
+                                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE753;" FontSize="24"
+                                                          Foreground="{Binding StatusBrush, Mode=OneWay}"
+                                                          PointerPressed="Pressed_StatusIcon"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <ToolTip Content="{Binding Connection.Description}"/>
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </Border>
 
@@ -175,12 +189,12 @@
                                         </StackPanel>
                                     </StackPanel>
 
-                                    <controls:DataGrid Grid.Row="2" x:Name="OrigemDataGrid" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" CanUserSortColumns="True" MinHeight="250">
+                                    <controls:DataGrid Grid.Row="2" x:Name="SourceDataGrid" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" CanUserSortColumns="True" MinHeight="300" DoubleTapped="DoubleTapped_SourceDataGrid">
                                         <controls:DataGrid.Columns>
                                             <controls:DataGridTemplateColumn Header="Ativo" Width="SizeToHeader">
                                                 <controls:DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}" Click="Click_SourceEnabled" HorizontalAlignment="Center"/>
+                                                        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}" Click="Click_SourceEnabled"/>
                                                     </DataTemplate>
                                                 </controls:DataGridTemplateColumn.CellTemplate>
                                             </controls:DataGridTemplateColumn>
@@ -188,6 +202,17 @@
                                             <controls:DataGridTextColumn Header="Tipo" Binding="{Binding TypeConnection}" Width="SizeToCells"/>
                                             <controls:DataGridTextColumn Header="Descrição" Binding="{Binding Description}" Width="*"/>
                                             <controls:DataGridTextColumn Header="Endereço (URL)" Binding="{Binding Address}" Width="2*"/>
+
+                                            <controls:DataGridTemplateColumn Width="SizeToHeader">
+                                                <controls:DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Click="Click_TestGridConnection" Padding="4" Height="32" Width="32"
+                                                                ToolTipService.ToolTip="Testar esta conexão">
+                                                            <SymbolIcon Symbol="Sync"/>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </controls:DataGridTemplateColumn.CellTemplate>
+                                            </controls:DataGridTemplateColumn>
                                         </controls:DataGrid.Columns>
                                     </controls:DataGrid>
                                 </Grid>
