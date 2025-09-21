@@ -16,11 +16,9 @@ public class Sincronization {
     [Column("sincronizacao")]
     public DateTime LastSyncronization { get; set; }
 
-    // Chave Estrangeira para a Conexão relacionada
     [Column("id_conexao")]
     public int ConnectionId { get; set; }
 
-    // Propriedade de Navegação
     [ForeignKey("ConnectionId")]
-    public Microsoft.EntityFrameworkCore.DbLoggerCategory.Database.Connection Connection { get; set; }
+    public Connection Connection { get; set; }
 }
