@@ -1,15 +1,17 @@
-using IntegradorApi.Data;
-using IntegradorApi.Models;
+using IntegradorApi.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
-namespace IntegradorApi.Services;
+namespace IntegradorApi.Data.Services;
 
 public class DatabaseService {
 
     private readonly DbContextOptions<AppDbContext> _dbContextOptions;
+    private readonly ILogger _logger;
 
-    public DatabaseService(DbContextOptions<AppDbContext> dbContextOptions) {
+    public DatabaseService(DbContextOptions<AppDbContext> dbContextOptions, ILogger logger) {
         _dbContextOptions = dbContextOptions;
+        _logger = logger;
     }
 
     public AppDbContext CreateDbContext() {
@@ -17,24 +19,44 @@ public class DatabaseService {
     }
 
     public async Task<List<Connection>> GetConnectionsAsync() {
-        await using var context = CreateDbContext();
-        return await context.Connections.ToListAsync();
+        try {
+            await using var context = CreateDbContext();
+            return await context.Connections.ToListAsync();
+        } catch (Exception ex) {
+            _logger.Error(ex, "Falha ao carregar conexões");
+            throw;
+        }
     }
 
     public async Task AddConnectionAsync(Connection connection) {
-        await using var context = CreateDbContext();
-        context.Connections.Add(connection);
-        await context.SaveChangesAsync();
+        try {
+            await using var context = CreateDbContext();
+            context.Connections.Add(connection);
+            await context.SaveChangesAsync();
+        } catch (Exception ex) {
+            _logger.Error(ex, "Falha ao adicionar conexão {ConnectionDesc}", connection.Description);
+            throw;
+        }
     }
 
     public async Task DeleteConnectionAsync(Connection connection) {
-        await using var context = CreateDbContext();
-        context.Connections.Remove(connection);
-        await context.SaveChangesAsync();
+        try {
+            await using var context = CreateDbContext();
+            context.Connections.Remove(connection);
+            await context.SaveChangesAsync();
+        } catch (Exception ex) {
+            _logger.Error(ex, "Falha ao deletar conexão {ConnectionDesc}", connection.Description);
+            throw;
+        }
     }
-    public async Task UpdateConnectionAsync(Connection connectionToUpdate) {
-        await using var context = CreateDbContext();
-        context.Connections.Update(connectionToUpdate);
-        await context.SaveChangesAsync();
+    public async Task UpdateConnectionAsync(Connection connection) {
+        try {
+            await using var context = CreateDbContext();
+            context.Connections.Update(connection);
+            await context.SaveChangesAsync();
+        } catch (Exception ex) {
+            _logger.Error(ex, "Falha ao atualizar conexão {ConnectionDesc}", connection.Description);
+            throw;
+        }
     }
 }

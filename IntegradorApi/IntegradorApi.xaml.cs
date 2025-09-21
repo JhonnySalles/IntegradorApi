@@ -1,7 +1,8 @@
-using IntegradorApi.Core;
 using IntegradorApi.Data;
+using IntegradorApi.Data.Core;
 using IntegradorApi.Data.Enums;
-using IntegradorApi.Models;
+using IntegradorApi.Data.Models;
+using IntegradorApi.Data.Services;
 using IntegradorApi.Services;
 using IntegradorApi.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -56,7 +57,7 @@ namespace IntegradorApi {
 
       var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
       optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
-      _databaseService = new DatabaseService(optionsBuilder.Options);
+      _databaseService = new DatabaseService(optionsBuilder.Options, Log.Logger);
 
       var hwnd = WindowNative.GetWindowHandle(this);
       var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
