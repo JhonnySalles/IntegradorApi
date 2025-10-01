@@ -4,6 +4,7 @@ using IntegradorApi.Data.Enums;
 using IntegradorApi.Data.Models;
 using IntegradorApi.Data.Services;
 using IntegradorApi.Services;
+using IntegradorApi.Sync.Services;
 using IntegradorApi.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -433,32 +434,22 @@ namespace IntegradorApi {
       // }
     }
 
-    private void RunSincronization(object state) {
-      // Log para o Serilog (thread-safe)
+    private async void RunSincronization(object state) {
       Serilog.Log.Information("Iniciando rotina de sincronização...");
-
-      // Atualiza a UI a partir da thread de background de forma segura
       DispatcherQueue.TryEnqueue(() => {
         LogTextBlock.Text += $"{DateTime.Now:G}: Iniciando rotina de sincronização...\n";
       });
 
       // ===================================================================
-      //
-      //      BLOCO DE EXECUÇÃO EM BRANCO - LÓGICA DA SINCRONIZAÇÃO
-      //
-      //      Este é o local onde você irá futuramente adicionar:
-      //      1. A chamada ao DatabaseService para buscar as conexões.
-      //      2. O loop para testar e conectar em cada fonte de dados.
-      //      3. A lógica para buscar novos dados.
-      //      4. A lógica para salvar os dados no destino.
-      //      5. A atualização do RegistroSincronizacao com a nova data.
-      //
+
+      try {
+        var orchestrator = new SyncOrchestrator(_databaseService, Log.Logger);
+        await orchestrator.RunAllActiveSyncsAsync();
+      } catch (Exception ex) {
+        Log.Error(ex, "Erro não tratado no processo de orquestração.");
+      }
+
       // ===================================================================
-
-      // Simula um tempo de execução
-      System.Threading.Thread.Sleep(5000); // Remover em produção
-
-      // Log de conclusão
       Serilog.Log.Information("Rotina de sincronização concluída.");
       DispatcherQueue.TryEnqueue(() => {
         LogTextBlock.Text += $"{DateTime.Now:G}: Rotina de sincronização concluída.\n";

@@ -2,8 +2,7 @@
 
 namespace IntegradorApi.Data.Models.NovelExtractor;
 
-public class NovelCapitulo {
-    public Guid? Id { get; set; }
+public class NovelCapitulo : Entity {
     public string Novel { get; set; } = string.Empty;
     public float Volume { get; set; }
     public float Capitulo { get; set; }

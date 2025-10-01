@@ -1,7 +1,6 @@
 ﻿namespace IntegradorApi.Data.Models.MangaExtractor;
 
-public class MangaPagina {
-    public Guid? Id { get; set; }
+public class MangaPagina : Entity {
     public string NomePagina { get; set; } = string.Empty;
     public int Numero { get; set; }
     public string Hash { get; set; } = string.Empty;

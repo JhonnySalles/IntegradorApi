@@ -59,4 +59,26 @@ public class DatabaseService {
             throw;
         }
     }
+
+    public async Task<DateTime> GetLastSyncDateAsync(int connectionId) {
+        await using var context = CreateDbContext();
+        var lastSync = await context.Sincronizations
+            .Where(s => s.ConnectionId == connectionId)
+            .OrderByDescending(s => s.LastSyncronization)
+            .FirstOrDefaultAsync();
+
+        return lastSync?.LastSyncronization ?? new DateTime(2000, 1, 1);
+    }
+
+    public async Task UpdateLastSyncDateAsync(int connectionId, DateTime syncDate) {
+        await using var context = CreateDbContext();
+
+        var syncRecord = new Sincronization {
+            ConnectionId = connectionId,
+            LastSyncronization = syncDate,
+            ResourceIdentifier = "general" // Identificador genérico para a conexão
+        };
+        context.Sincronizations.Add(syncRecord);
+        await context.SaveChangesAsync();
+    }
 }

@@ -1,7 +1,6 @@
 ﻿namespace IntegradorApi.Data.Models.NovelExtractor;
 
-public class NovelVocabulario {
-    public Guid? Id { get; set; }
+public class NovelVocabulario : Entity {
     public string Palavra { get; set; } = string.Empty;
     public string Leitura { get; set; } = string.Empty;
     public string Ingles { get; set; } = string.Empty;

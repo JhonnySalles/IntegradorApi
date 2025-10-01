@@ -1,7 +1,6 @@
 ﻿namespace IntegradorApi.Data.Models.MangaExtractor;
 
-public class MangaVocabulario {
-    public Guid? Id { get; set; }
+public class MangaVocabulario : Entity {
     public string Palavra { get; set; } = string.Empty;
     public string Leitura { get; set; } = string.Empty;
     public string Ingles { get; set; } = string.Empty;
