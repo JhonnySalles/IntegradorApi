@@ -14,7 +14,7 @@ public class Connection {
     public string Description { get; set; }
 
     [Required]
-    [Column("tipo")]
+    [Column("conexao")]
     public ConnectionType TypeConnection { get; set; }
 
     [Required]
@@ -33,6 +33,10 @@ public class Connection {
     [Required]
     [Column("ativo")]
     public Boolean Enabled { get; set; }
+
+    [Required]
+    [Column("tipo")]
+    public IntegrationType TypeIntegration { get; set; }
 
     public ICollection<Sincronization> Sincronizations { get; set; } = new List<Sincronization>();
 

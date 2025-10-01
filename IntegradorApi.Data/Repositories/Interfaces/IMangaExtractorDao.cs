@@ -42,4 +42,8 @@ public interface IMangaExtractorDao {
     Task CreateTableAsync(string tableName);
     Task<bool> ExistTableAsync(string tableName);
     Task<List<string>> GetTablesAsync();
+    Task<List<string>> GetTablesAsync(DateTime since);
+
+    // Existe
+    Task<bool> ExistVolumeAsync(string tableName, Guid id);
 }

@@ -219,7 +219,8 @@ public class MangaExtractorDaoJdbc : IMangaExtractorDao {
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
         await command.ExecuteNonQueryAsync();
 
-        if (obj.Capa != null) await InsertCapaAsync(dbName, id, obj.Capa);
+        if (obj.Capa != null)
+            await InsertCapaAsync(dbName, id, obj.Capa);
         await InsertVocabularioAsync(dbName, idVolume: id, vocabulario: obj.Vocabularios);
 
         return id;
