@@ -16,30 +16,42 @@ public class SyncOrchestrator {
         _logger = logger;
     }
 
+    private async SyncServiceBase<T> getService(Connection connection) {
+
+    }
+
     /// <summary>
     /// Executa a sincronização para todas as conexões de origem ativas.
     /// </summary>
     public async Task RunAllActiveSyncsAsync() {
         _logger.Information("Iniciando orquestrador de sincronização...");
-        var activeConnections = await _databaseService.GetConnectionsAsync(); // Assumindo que este método retorna todas
+        var connectionsOrigin = await _databaseService.GetConnectionsAsync(); // Assumindo que este método retorna todas
+        var connectionsDestination = await _databaseService.GetConnectionsAsync(); // Assumindo que este método retorna todas
 
-        foreach (var connection in activeConnections.Where(c => c.Enabled)) {
+        foreach (var connectionOrigin in connectionsOrigin.Where(c => c.Enabled)) {
+            var connectionDestination = connectionsDestination.Find(c => c.Enabled && c.TypeIntegration == connectionOrigin.TypeIntegration);
+            if (connectionDestination == null)
+                continue;
+
             try {
-                // Lógica de fábrica para decidir qual serviço usar
-                switch (connection.TypeConnection) {
+
+                switch (connectionOrigin.TypeConnection) {
                     case ConnectionType.MySql:
-                        var mangaService = new MangaDataSyncService(connection, _logger);
-                        await RunSyncForConnectionAsync(mangaService, connection);
+                        var mangaServiceOrigin = new MangaDataSyncService(connectionOrigin, _logger);
+                        var mangaServiceDestination = new MangaDataSyncService(connectionDestination, _logger);
+                        await RunSyncForConnectionAsync(mangaServiceOrigin, mangaServiceDestination, connectionOrigin);
                         break;
 
                     case ConnectionType.RestApi: // Supondo que Novel use RestApi
-                        // var novelService = new NovelSyncService(connection, _logger);
-                        // await RunSyncForConnectionAsync(novelService, connection);
+                                                 // var novelService = new NovelSyncService(connection, _logger);
+                                                 // await RunSyncForConnectionAsync(novelService, connection);
                         _logger.Warning("Sincronização para Novel (RestApi) ainda não implementada.");
                         break;
                 }
+
+
             } catch (Exception ex) {
-                _logger.Error(ex, "Falha crítica ao sincronizar a conexão {Description}", connection.Description);
+                _logger.Error(ex, "Falha crítica ao sincronizar a conexão {Description}", connectionOrigin.Description);
             }
         }
         _logger.Information("Orquestrador de sincronização finalizado.");
