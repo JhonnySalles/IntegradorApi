@@ -146,4 +146,44 @@ public class ApiClientService {
             return false;
         }
     }
+
+    /// <summary>
+    /// Executa uma requisição DELETE genérica para a API, enviando um objeto como corpo JSON.
+    /// </summary>
+    /// <param name="requestUri">A URI do endpoint (ex: "/api/manga-extractor/tabela/tabela_teste/lista").</param>
+    /// <param name="data">O objeto de dados a ser serializado e enviado.</param>
+    /// <returns>Verdadeiro se a operação foi bem-sucedida (status 2xx).</returns>
+    public async Task<bool> DeleteAsync(string requestUri, object data) {
+        if (!await SignInAsync()) {
+            _logger.Error("Não foi possível autenticar na API para a requisição DELETE: {RequestUri}", requestUri);
+            throw new Exception("Token de acesso expirou ou é inválido ao acessar " + requestUri);
+        }
+
+        try {
+            var jsonPayload = JsonConvert.SerializeObject(data);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Delete, requestUri) {
+                Content = content
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", ApiAuthManager.AccessToken);
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized) {
+                ApiAuthManager.ClearAuthentication();
+                _logger.Warning("Token de acesso expirou ou é inválido ao enviar DELETE para {RequestUri}", requestUri);
+                return false;
+            }
+
+            if (!response.IsSuccessStatusCode)
+                _logger.Error("Requisição DELETE para {RequestUri} falhou com status {StatusCode}. Conteúdo: {ResponseContent}", requestUri, response.StatusCode, await response.Content.ReadAsStringAsync());
+
+            return response.IsSuccessStatusCode;
+        } catch (Exception ex) {
+            _logger.Error(ex, "Exceção na requisição DELETE para {RequestUri}", requestUri);
+            return false;
+        }
+    }
 }

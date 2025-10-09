@@ -4,7 +4,7 @@ namespace IntegradorApi.Api.Models;
 
 public class MangaVolumeDto {
     public Guid Id { get; set; }
-    public string? Manga { get; set; }
+    public string Manga { get; set; }
     public int Volume { get; set; }
     public string? Lingua { get; set; } // A API retorna string, faremos a conversão depois
     public List<MangaCapituloDto> Capitulos { get; set; } = new();

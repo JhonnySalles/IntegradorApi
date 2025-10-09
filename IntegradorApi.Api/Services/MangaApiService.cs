@@ -61,4 +61,17 @@ public class MangaApiService {
 
         return await _apiClient.PatchAsync(requestUri, volumes);
     }
+
+    public async Task<bool> DeleteVolumesAsync(string tableName, List<MangaVolume> volumes) {
+        if (volumes == null || !volumes.Any()) {
+            _logger.Information("Nenhum volume de mangá para deletar da tabela {TableName}.", tableName);
+            return true;
+        }
+
+        _logger.Information("Deletando {VolumeCount} volumes de mangá para a tabela {TableName}...", volumes.Count, tableName);
+
+        var requestUri = $"/api/manga-extractor/tabela/{tableName}/lista";
+
+        return await _apiClient.DeleteAsync(requestUri, volumes);
+    }
 }

@@ -7,7 +7,7 @@
     /// Delegate para callback de progresso durante a sincronização.
     /// </summary>
     /// <typeparam name="T">O tipo da entidade.</typeparam>
-    public delegate Task ProgressCallback<T>(List<T> entities);
+    public delegate Task ProgressCallback<T>(List<T> entities, String extra);
 
     /// <summary>
     /// Define um contrato genérico para serviços de sincronização.
@@ -26,24 +26,28 @@
         /// Salva uma lista de entidades no banco de dados local.
         /// </summary>
         /// <param name="entities">A lista de entidades para salvar.</param>
-        Task SaveAsync(List<T> entities);
+        /// <param name="extra">Um atributo extra para o processamento, como tabela.</param>
+        Task SaveAsync(List<T> entities, String extra);
 
         /// <summary>
         /// Salva uma única entidade no banco de dados local.
         /// </summary>
         /// <param name="entity">A entidade para salvar.</param>
-        Task SaveAsync(T entity) => SaveAsync(new List<T> { entity });
+        /// <param name="extra">Um atributo extra para o processamento, como tabela.</param>
+        Task SaveAsync(T entity, String extra) => SaveAsync(new List<T> { entity }, extra);
 
         /// <summary>
         /// Deleta uma lista de entidades do banco de dados local.
         /// </summary>
         /// <param name="entities">A lista de entidades para deletar.</param>
-        Task DeleteAsync(List<T> entities);
+        /// <param name="extra">Um atributo extra para o processamento, como tabela.</param>
+        Task DeleteAsync(List<T> entities, String extra);
 
         /// <summary>
         /// Deleta uma única entidade do banco de dados local.
         /// </summary>
         /// <param name="entity">A entidade para deletar.</param>
-        Task DeleteAsync(T entity) => DeleteAsync(new List<T> { entity });
+        /// <param name="extra">Um atributo extra para o processamento, como tabela.</param>
+        Task DeleteAsync(T entity, String extra) => DeleteAsync(new List<T> { entity }, extra);
     }
 }

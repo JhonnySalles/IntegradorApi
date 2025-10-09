@@ -21,11 +21,14 @@ public abstract class SyncServiceBase<T> : ISyncService<T> where T : Entity {
     /// <param name="connection">A configuração da conexão.</param>
     protected SyncServiceBase(Connection connection) {
         Connection = connection ?? throw new ArgumentNullException(nameof(connection));
+        initialize();
     }
+
+    protected abstract void initialize();
 
     public abstract Task GetAsync(DateTime since, ProgressCallback<T> onPageReceived);
 
-    public abstract Task SaveAsync(List<T> entities);
+    public abstract Task SaveAsync(List<T> entities, String extra);
 
-    public abstract Task DeleteAsync(List<T> entities);
+    public abstract Task DeleteAsync(List<T> entities, String extra);
 }

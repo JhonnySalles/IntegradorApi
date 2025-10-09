@@ -31,12 +31,15 @@ public class Connection {
     public string Optional { get; set; }
 
     [Required]
-    [Column("ativo")]
-    public Boolean Enabled { get; set; }
-
-    [Required]
     [Column("tipo")]
     public IntegrationType TypeIntegration { get; set; }
+
+    [Column("delete")]
+    public Boolean Delete { get; set; }
+
+    [Required]
+    [Column("ativo")]
+    public Boolean Enabled { get; set; }
 
     public ICollection<Sincronization> Sincronizations { get; set; } = new List<Sincronization>();
 

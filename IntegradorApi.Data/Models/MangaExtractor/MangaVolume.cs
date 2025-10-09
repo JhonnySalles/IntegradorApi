@@ -3,7 +3,6 @@
 namespace IntegradorApi.Data.Models.MangaExtractor;
 
 public class MangaVolume : Entity {
-    public string Tabela { get; set; }
     public string Manga { get; set; } = string.Empty;
     public int Volume { get; set; }
     public Linguagens Lingua { get; set; }

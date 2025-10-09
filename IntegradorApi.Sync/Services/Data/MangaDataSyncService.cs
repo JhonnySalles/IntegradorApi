@@ -1,6 +1,6 @@
 ﻿using IntegradorApi.Data.Models;
 using IntegradorApi.Data.Models.MangaExtractor;
-using IntegradorApi.Data.Repositories; // Para o DaoFactory
+using IntegradorApi.Data.Repositories;
 using IntegradorApi.Data.Repositories.Interfaces;
 using IntegradorApi.Sync.Interfaces;
 using MySqlConnector;
@@ -14,10 +14,9 @@ public class MangaDataSyncService : SyncServiceBase<MangaVolume> {
 
     public MangaDataSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
-        initialize();
     }
 
-    private async void initialize() {
+    protected override async void initialize() {
         var dbConnection = new MySqlConnection(Connection.Address);
         await dbConnection.OpenAsync();
         _dao = DaoFactory.CreateMangaExtractorDao(dbConnection, Connection.Optional);
@@ -33,39 +32,35 @@ public class MangaDataSyncService : SyncServiceBase<MangaVolume> {
         }
 
         foreach (var table in tables)
-            onPageReceived.Invoke(await _dao.SelectAllVolumesAsync(table, since));
+            await onPageReceived.Invoke(await _dao.SelectAllVolumesAsync(table, since), table);
     }
 
-    public override async Task SaveAsync(List<MangaVolume> entities) {
+    public override async Task SaveAsync(List<MangaVolume> entities, String extra) {
         _logger.Information("Salvando {Count} volumes de Mangas", entities.Count);
 
-        var table = "";
+        if (!await _dao.ExistTableAsync(extra))
+            await _dao.CreateTableAsync(extra);
+
         foreach (var volume in entities) {
-            if (table != volume.Tabela) {
-                table = volume.Tabela;
-                if (!await _dao.ExistTableAsync(table))
-                    await _dao.CreateTableAsync(table);
-            }
+            if (await _dao.ExistVolumeAsync(extra, (Guid)volume.Id))
+                await _dao.DeleteVolumeAsync(extra, volume);
 
-            if (await _dao.ExistVolumeAsync(table, (Guid)volume.Id))
-                await _dao.DeleteVolumeAsync(table, volume);
-
-            await _dao.InsertVolumeAsync(table, volume);
+            await _dao.InsertVolumeAsync(extra, volume);
             foreach (var capitulo in volume.Capitulos) {
-                await _dao.InsertCapituloAsync(table, (Guid)volume.Id, capitulo);
+                await _dao.InsertCapituloAsync(extra, (Guid)volume.Id, capitulo);
                 foreach (var pagina in capitulo.Paginas) {
-                    await _dao.InsertPaginaAsync(table, (Guid)capitulo.Id, pagina);
+                    await _dao.InsertPaginaAsync(extra, (Guid)capitulo.Id, pagina);
                     foreach (var texto in pagina.Textos)
-                        await _dao.InsertTextoAsync(table, (Guid)pagina.Id, texto);
+                        await _dao.InsertTextoAsync(extra, (Guid)pagina.Id, texto);
                 }
             }
         }
     }
 
-    public override async Task DeleteAsync(List<MangaVolume> entities) {
+    public override async Task DeleteAsync(List<MangaVolume> entities, String extra) {
         _logger.Information("Deletando {Count} volumes de Mangas", entities.Count);
 
         foreach (var entity in entities)
-            await _dao.DeleteVolumeAsync(entity.Tabela, entity);
+            await _dao.DeleteVolumeAsync(extra, entity);
     }
 }

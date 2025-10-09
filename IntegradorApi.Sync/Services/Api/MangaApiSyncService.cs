@@ -1,66 +1,79 @@
 ﻿using IntegradorApi.Api.Services;
+using IntegradorApi.Data.Enums;
 using IntegradorApi.Data.Models;
 using IntegradorApi.Data.Models.MangaExtractor;
 using IntegradorApi.Data.Services;
+using IntegradorApi.Sync.Interfaces;
 using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
 public class MangaApiSyncService : SyncServiceBase<MangaVolume> {
     private readonly ILogger _logger;
+    private MangaApiService _api;
 
     public MangaApiSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
     }
+    protected override async void initialize() {
+        var apiClient = new ApiClientService(Connection, _logger);
+        _api = new MangaApiService(apiClient, _logger);
+    }
 
-    public override async Task<List<MangaVolume>> GetAsync(DateTime since) {
+    public override async Task GetAsync(DateTime since, ProgressCallback<MangaVolume> onPageReceived) {
         _logger.Information("Iniciando 'Loading' de Mangás para a conexão {Description}", Connection.Description);
 
-        var apiClient = new ApiClientService(Connection, _logger);
-        var mangaApiService = new MangaApiService(apiClient, _logger);
-
-        var tables = await mangaApiService.GetTablesAsync();
+        var tables = await _api.GetTablesAsync();
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhuma tabela encontrada para a conexão {Description}", Connection.Description);
-            return new List<MangaVolume>();
+            return;
         }
 
-        // Lógica para carregar os DTOs da API
-        // Aqui você implementaria a paginação, etc.
-        var pagedResponse = await mangaApiService.GetUpdatesAsync(tables.First(), since, 0);
+        foreach (var table in tables) {
+            _logger.Information("Processando tabela: {TableName}", table);
+            int currentPage = 0;
+            bool hasNextPage;
 
-        if (pagedResponse?.Content == null)
-            return new List<MangaVolume>();
+            do {
+                var pagedResponse = await _api.GetUpdatesAsync(table, since, currentPage);
 
-        // Lógica de Mapeamento de DTO para Entidade (simplificado)
-        var volumes = new List<MangaVolume>();
-        foreach (var dto in pagedResponse.Content) {
-            // Aqui você usaria uma classe de Mapper (ex: AutoMapper) para converter DTO em Entidade
-            volumes.Add(new MangaVolume { Id = dto.Id, Manga = dto.Manga, /* ... etc ... */ });
+                if (pagedResponse?.Content == null || !pagedResponse.Content.Any()) {
+                    _logger.Information("Nenhum dado novo encontrado na página {Page} para a tabela {Table}", currentPage, table);
+                    hasNextPage = false;
+                } else {
+                    var entities = pagedResponse.Content.Select(dto => new MangaVolume {
+                        Id = dto.Id,
+                        Manga = dto.Manga,
+                        Volume = dto.Volume,
+                        Lingua = Enum.Parse<Linguagens>(dto.Lingua, true),
+                        Arquivo = dto.Arquivo,
+                        Processado = dto.Processado
+                    }).ToList();
+
+                    var pageInfo = pagedResponse.Page;
+                    float progressPercentage = pageInfo != null && pageInfo.TotalPages > 0 ? (float)(pageInfo.Number + 1) / pageInfo.TotalPages : 1.0f;
+                    string progressText = pageInfo != null ? $"Página {pageInfo.Number + 1} de {pageInfo.TotalPages} ({pagedResponse.Content.Count} registros)" : "Página única";
+
+                    _logger.Information(progressText);
+
+                    await onPageReceived.Invoke(entities, table);
+                    hasNextPage = !string.IsNullOrEmpty(pagedResponse.Links?.Next?.Href);
+                    currentPage++;
+                }
+
+            } while (hasNextPage);
+
+            _logger.Information("Processamento da tabela {Table} concluído.", table);
         }
-        return volumes;
     }
 
-    public override async Task SaveAsync(List<MangaVolume> entities) {
+    public override async Task SaveAsync(List<MangaVolume> entities, String extra) {
         _logger.Information("Iniciando 'Save' de {Count} volumes de Mangá", entities.Count);
-
-        // Lógica para obter a conexão com o banco de dados de destino e usar o DAO
-        // Esta parte depende de como você gerencia a conexão do seu DAO JDBC.
-        // Exemplo hipotético:
-        // await using (var dbConnection = new MySqlConnection("sua_connection_string_destino"))
-        // {
-        //     await dbConnection.OpenAsync();
-        //     var mangaDao = DaoFactory.CreateMangaExtractorDao(dbConnection, "nome_do_banco_destino");
-        //     foreach (var volume in entities)
-        //     {
-        //         await mangaDao.UpdateVolumeAsync("nome_do_banco_destino", volume);
-        //     }
-        // }
+        await _api.SendVolumesAsync(extra, entities);
     }
 
-    public override Task DeleteAsync(List<MangaVolume> entities) {
+    public override async Task DeleteAsync(List<MangaVolume> entities, String extra) {
         _logger.Information("Iniciando 'Delete' de {Count} volumes de Mangá", entities.Count);
-        // Lógica de exclusão aqui...
-        throw new NotImplementedException();
+        await _api.DeleteVolumesAsync(extra, entities);
     }
 }
