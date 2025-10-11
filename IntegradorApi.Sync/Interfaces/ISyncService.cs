@@ -16,6 +16,11 @@
     public interface ISyncService<T> where T : Entity {
 
         /// <summary>
+        /// Obtem a descrição da sincronização.
+        /// </summary>
+        String Description();
+
+        /// <summary>
         /// Carrega entidades da fonte de dados de forma paginada e invoca um callback para cada página recebida.
         /// </summary>
         /// <param name="since">A data da última sincronização.</param>

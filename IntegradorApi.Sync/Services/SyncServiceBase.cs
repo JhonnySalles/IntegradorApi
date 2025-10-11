@@ -26,6 +26,10 @@ public abstract class SyncServiceBase<T> : ISyncService<T> where T : Entity {
 
     protected abstract void initialize();
 
+    public String Description() {
+        return Connection.Description;
+    }
+
     public abstract Task GetAsync(DateTime since, ProgressCallback<T> onPageReceived);
 
     public abstract Task SaveAsync(List<T> entities, String extra);

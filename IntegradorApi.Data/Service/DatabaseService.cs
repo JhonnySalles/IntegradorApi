@@ -1,3 +1,4 @@
+using IntegradorApi.Data.Enums;
 using IntegradorApi.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -24,6 +25,26 @@ public class DatabaseService {
             return await context.Connections.ToListAsync();
         } catch (Exception ex) {
             _logger.Error(ex, "Falha ao carregar conexões");
+            throw;
+        }
+    }
+
+    public async Task<List<Connection>> GetOriginConnectionsAsync() {
+        try {
+            await using var context = CreateDbContext();
+            return await context.Connections.Where(c => c.TypeDataSource == DataSourceType.ORIGIN).ToListAsync();
+        } catch (Exception ex) {
+            _logger.Error(ex, "Falha ao carregar conexões de origem");
+            throw;
+        }
+    }
+
+    public async Task<List<Connection>> GetDestinationConnectionsAsync() {
+        try {
+            await using var context = CreateDbContext();
+            return await context.Connections.Where(c => c.TypeDataSource == DataSourceType.DESTINATION).ToListAsync();
+        } catch (Exception ex) {
+            _logger.Error(ex, "Falha ao carregar conexões de destino");
             throw;
         }
     }

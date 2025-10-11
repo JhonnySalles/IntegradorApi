@@ -63,4 +63,5 @@ public class MangaDataSyncService : SyncServiceBase<MangaVolume> {
         foreach (var entity in entities)
             await _dao.DeleteVolumeAsync(extra, entity);
     }
+
 }

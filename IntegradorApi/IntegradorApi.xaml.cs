@@ -18,6 +18,8 @@ using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WinRT.Interop;
 
@@ -77,6 +79,19 @@ namespace IntegradorApi {
       await LoadSourceDataGridAsync();
     }
 
+    private async void ButtonClick_ConnectionsTests(object sender, RoutedEventArgs e) {
+      Log.Information("Iniciando teste de todas as conexões ativas...");
+      var statusIconsToTest = StatusIcons.ToList();
+      foreach (var statusVm in statusIconsToTest) {
+        var connectionToTest = statusVm.Connection;
+        DispatcherQueue.TryEnqueue(() => { statusVm.StatusBrush = new SolidColorBrush(Colors.Yellow); });
+        bool isSuccess = await TestConnection(connectionToTest);
+        DispatcherQueue.TryEnqueue(() => { statusVm.StatusBrush = new SolidColorBrush(isSuccess ? Colors.Green : Colors.Red); });
+      }
+
+      Log.Information("Teste de todas as conexões finalizado.");
+    }
+
     private void ButtonClick_ToggleSyncronize(object sender, RoutedEventArgs e) {
       bool currentState = _settingsService.GetSincronizacaoStatus();
       _settingsService.SetSincronizacaoStatus(!currentState);
@@ -113,28 +128,19 @@ namespace IntegradorApi {
     }
 
     private async void Click_TestConnection(object sender, RoutedEventArgs e) {
-      var connectionStringBuilder = new MySqlConnectionStringBuilder {
-        Server = TxtDataBaseAddress.Text,
-        Port = Convert.ToUInt32(TxtDataBasePort.Text),
-        UserID = TxtDataBaseUser.Text,
+      var connection = new Connection {
+        Description = "Data base local",
+        Address = TxtDataBaseAddress.Text + ":" + TxtDataBasePort.Text,
+        User = TxtDataBaseUser.Text,
         Password = PswDataBasePassword.Password,
-        Database = GlobalConstants.DatabaseName,
-        ConnectionTimeout = 5
+        Optional = GlobalConstants.DatabaseName,
+        TypeConnection = ConnectionType.MYSQL,
       };
 
-      // Tenta abrir e fechar a conexão
-      MySqlConnection connection = null;
-      try {
-        connection = new MySqlConnection(connectionStringBuilder.ConnectionString);
-        await connection.OpenAsync();
+      if (await TestConnection(connection))
         await ShowMessageDialog("Sucesso!", "A conexão com o banco de dados foi estabelecida com sucesso.");
-      } catch (Exception ex) {
-        await ShowMessageDialog("Falha na Conexão", $"Não foi possível conectar ao banco de dados.\n\nErro: {ex.Message}");
-      } finally {
-        if (connection?.State == System.Data.ConnectionState.Open) {
-          await connection.CloseAsync();
-        }
-      }
+      else
+        await ShowMessageDialog("Falha na Conexão", $"Não foi possível conectar ao banco de dados.");
     }
 
     private async void Click_SaveConnection(object sender, RoutedEventArgs e) {
@@ -171,7 +177,7 @@ namespace IntegradorApi {
         _connectEdit.Optional = SourceOptionalTextBox.Text;
         _connectEdit.Enabled = SourceEnabledCheckBox.IsChecked ?? false;
         _connectEdit.Delete = SourceDeleteCheckBox.IsChecked ?? false;
-        _connectEdit.TypeIntegration = (IntegrationType)SourceTypeComboBox.SelectedIndex;
+        _connectEdit.TypeIntegration = (IntegrationType)SourceIntegrationComboBox.SelectedIndex;
 
         await _databaseService.UpdateConnectionAsync(_connectEdit);
       } else {
@@ -185,7 +191,7 @@ namespace IntegradorApi {
           Optional = SourceOptionalTextBox.Text,
           Enabled = SourceEnabledCheckBox.IsChecked ?? false,
           Delete = SourceDeleteCheckBox.IsChecked ?? false,
-          TypeIntegration = (IntegrationType)SourceDataComboBox.SelectedIndex,
+          TypeIntegration = (IntegrationType)SourceIntegrationComboBox.SelectedIndex,
         };
 
         await _databaseService.AddConnectionAsync(newConnection);
@@ -206,6 +212,34 @@ namespace IntegradorApi {
       await _databaseService.DeleteConnectionAsync(selectedConnection);
       SourceConnections.Remove(selectedConnection);
       RefreshStatusIcons();
+      ClearSourceForm();
+    }
+
+    private async void Click_TestSource(object sender, RoutedEventArgs e) {
+      if (SourceTypeComboBox.SelectedItem == null || SourceDataComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(SourceAddressTextBox.Text)) {
+        await ShowMessageDialog("Dados Incompletos", "Para testar, por favor selecione uma conexão, fonte e preencha o endereço (URL).");
+        return;
+      }
+
+      var tempConexao = new Connection {
+        TypeConnection = (ConnectionType)SourceTypeComboBox.SelectedIndex,
+        TypeDataSource = (DataSourceType)SourceDataComboBox.SelectedIndex,
+        Description = SourceDescriptionTextBox.Text,
+        Address = SourceAddressTextBox.Text,
+        User = SourceUserTextBox.Text,
+        Password = SourcePasswordTextBox.Text,
+        Optional = SourceOptionalTextBox.Text,
+        Enabled = SourceEnabledCheckBox.IsChecked ?? false,
+        Delete = SourceDeleteCheckBox.IsChecked ?? false,
+        TypeIntegration = (IntegrationType)SourceIntegrationComboBox.SelectedIndex,
+      };
+
+      bool isSuccess = await TestConnection(tempConexao);
+
+      if (isSuccess)
+        await ShowMessageDialog("Sucesso", "A conexão foi estabelecida com sucesso!");
+      else
+        await ShowMessageDialog("Falha", "Não foi possível conectar. Verifique os dados inseridos e os logs para mais detalhes.");
     }
 
     private async void Click_SourceEnabled(object sender, RoutedEventArgs e) {
@@ -219,8 +253,34 @@ namespace IntegradorApi {
 
     private async void Click_TestGridConnection(object sender, RoutedEventArgs e) {
       if (sender is FrameworkElement element && element.DataContext is Connection connection)
-        await TestSingleConnection(connection);
+        await TestConnection(connection);
+    }
 
+    private void SourceType_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+      var comboBox = sender as ComboBox;
+      var selectedItem = comboBox?.SelectedItem as ComboBoxItem;
+
+      if (selectedItem == null) {
+        SourceOptionalTextBox.PlaceholderText = "Selecione um tipo de conexão primeiro...";
+        return;
+      }
+
+      string? selection = selectedItem.Content.ToString();
+
+      switch (selection) {
+        case "MySQL":
+        case "PostgreSQL":
+          SourceOptionalTextBox.PlaceholderText = "Nome do banco de dados (ex: 'meu_banco')";
+          break;
+
+        case "REST API":
+          SourceOptionalTextBox.PlaceholderText = "Endpoint base (ex: '/api/v1')";
+          break;
+
+        default:
+          SourceOptionalTextBox.PlaceholderText = "Parâmetro específico do tipo de conexão";
+          break;
+      }
     }
 
     private async Task ShowMessageDialog(string title, string content) {
@@ -254,7 +314,7 @@ namespace IntegradorApi {
       SourceOptionalTextBox.Text = _connectEdit.Optional;
       SourceEnabledCheckBox.IsChecked = _connectEdit.Enabled;
       SourceDeleteCheckBox.IsChecked = _connectEdit.Delete;
-      SourceTypeComboBox.SelectedIndex = (int)_connectEdit.TypeIntegration;
+      SourceIntegrationComboBox.SelectedIndex = (int)_connectEdit.TypeIntegration;
       SourceDataComboBox.SelectedIndex = (int)_connectEdit.TypeDataSource;
       SourceTypeComboBox.SelectedIndex = (int)_connectEdit.TypeConnection;
 
@@ -282,40 +342,79 @@ namespace IntegradorApi {
     private async void TestConnectionStatus(ConnectionStatusViewModel statusVm) {
       statusVm.StatusBrush = new SolidColorBrush(Colors.Yellow);
 
-      var connStringBuilder = new MySqlConnectionStringBuilder {
-        Server = statusVm.Connection.Address,
-        Port = Convert.ToUInt32(TxtDataBasePort.Text),
-        UserID = statusVm.Connection.User,
-        Password = statusVm.Connection.Password,
-        Database = GlobalConstants.DatabaseName,
-        ConnectionTimeout = 5
-      };
-
-      try {
-        await using var connection = new MySqlConnection(connStringBuilder.ConnectionString);
-        await connection.OpenAsync();
+      if (await TestConnection(statusVm.Connection))
         statusVm.StatusBrush = new SolidColorBrush(Colors.Green);
-      } catch (Exception) {
+      else
         statusVm.StatusBrush = new SolidColorBrush(Colors.Red);
-      }
     }
 
-    private async Task TestSingleConnection(Connection connection) {
-      var connStringBuilder = new MySqlConnectionStringBuilder {
-        Server = connection.Address,
-        Port = Convert.ToUInt32(TxtDataBasePort.Text),
-        UserID = connection.User,
-        Password = connection.Password,
-        Database = GlobalConstants.DatabaseName,
-        ConnectionTimeout = 5
-      };
+    /// <summary>
+    /// Testa uma conexão de forma genérica, baseando-se no seu tipo (Provider).
+    /// </summary>
+    /// <param name="conexao">O objeto de Conexão a ser testado.</param>
+    /// <returns>Verdadeiro se a conexão foi bem-sucedida, falso caso contrário.</returns>
+    private async Task<bool> TestConnection(Connection connection) {
+      Log.Information("Iniciando teste de conexão para: {Description}", connection.Description);
 
       try {
-        await using var mysqlConn = new MySqlConnection(connStringBuilder.ConnectionString);
-        await mysqlConn.OpenAsync();
-        await ShowMessageDialog("Sucesso!", $"A conexão '{connection.Description}' foi estabelecida com sucesso.");
+        switch (connection.TypeConnection) {
+          case ConnectionType.MYSQL: {
+              if (string.IsNullOrWhiteSpace(connection.Optional)) {
+                Log.Error("{Description}: O nome do banco de dados (Campo Opcional) é obrigatório para conexões MySQL.", connection.Description);
+                return false;
+              }
+
+              var dbUri = new Uri(connection.Address);
+              var connStringBuilder = new MySqlConnectionStringBuilder {
+                Server = dbUri.Host,
+                Port = (uint)dbUri.Port,
+                UserID = connection.User,
+                Password = connection.Password,
+                Database = connection.Optional,
+                ConnectionTimeout = 5
+              };
+
+              await using var mysqlConn = new MySqlConnection(connStringBuilder.ConnectionString);
+              Log.Information("{Description}: Conexão MySQL estabelecida com sucesso.", connection.Description);
+              return true;
+            }
+
+          case ConnectionType.POSTGRESSQL:
+            Log.Warning("Teste de conexão para PostgreSQL ainda não implementado.");
+            // TODO: Implementar lógica de teste para PostgreSQL (requer o pacote Npgsql)
+            // var pgUri = new Uri(conexao.Address);
+            // var pgConnString = $"Host={pgUri.Host};Port={pgUri.Port};Username={conexao.User};Password={conexao.Password};Database={conexao.Optional}";
+            // await using var pgConn = new NpgsqlConnection(pgConnString);
+            // await pgConn.OpenAsync();
+            return false;
+
+          case ConnectionType.APIREST: {
+              // Monta a URL para o endpoint de saúde
+              var healthCheckUrl = new Uri(new Uri(connection.Address), "health");
+
+              using (var httpClient = new HttpClient()) {
+                httpClient.Timeout = TimeSpan.FromSeconds(10);
+                httpClient.DefaultRequestHeaders.Accept.Clear();
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+                var response = await httpClient.GetAsync(healthCheckUrl);
+
+                if (response.IsSuccessStatusCode) {
+                  Log.Information("{Description}: API respondeu com sucesso (Status: {StatusCode}) no endpoint de saúde.", connection.Description, response.StatusCode);
+                  return true;
+                } else {
+                  Log.Error("{Description}: O endpoint de saúde da API falhou com o status: {StatusCode}", connection.Description, response.StatusCode);
+                  return false;
+                }
+              }
+            }
+
+          default:
+            Log.Warning("{Description}: Tipo de conexão desconhecido ou não suportado para teste: {Provider}", connection.Description, connection.TypeConnection);
+            return false;
+        }
       } catch (Exception ex) {
-        await ShowMessageDialog("Falha na Conexão", $"Não foi possível conectar em '{connection.Description}'.\n\nErro: {ex.Message}");
+        Log.Error(ex, "{Description}: Exceção durante o teste de conexão.", connection.Description);
+        return false;
       }
     }
 

@@ -46,13 +46,28 @@
 
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="viewmodels:ConnectionStatusViewModel">
-                                                <Grid>
-                                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE753;" FontSize="24"
-                                                          Foreground="{Binding StatusBrush, Mode=OneWay}"
-                                                          PointerPressed="Pressed_StatusIcon"/>
+                                                <Grid Width="48" Height="48" PointerPressed="Pressed_StatusIcon">
                                                     <ToolTipService.ToolTip>
                                                         <ToolTip Content="{Binding Connection.Description}"/>
                                                     </ToolTipService.ToolTip>
+
+                                                    <FontIcon
+                                                        FontFamily="Segoe Fluent Icons"
+                                                        Glyph="{Binding TechnologyGlyph}"
+                                                        FontSize="32"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Opacity="0.7"
+                                                        Foreground="{Binding StatusBrush, Mode=OneWay}" />
+
+                                                    <FontIcon
+                                                        FontFamily="Segoe Fluent Icons"
+                                                        Glyph="{Binding DirectionGlyph}"
+                                                        FontSize="18"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Bottom"
+                                                        FontWeight="Bold"
+                                                        Foreground="{Binding StatusBrush, Mode=OneWay}" />
                                                 </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -73,7 +88,7 @@
                             </Grid>
 
                             <StackPanel Grid.Column="1" Spacing="10">
-                                <Button x:Name="TestarConexoesButton" HorizontalAlignment="Stretch">
+                                <Button x:Name="TestsConnectionsButton" HorizontalAlignment="Stretch" Click="ButtonClick_ConnectionsTests">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <SymbolIcon Symbol="Find"/>
                                         <TextBlock Text="Testar Conexões"/>
@@ -127,7 +142,7 @@
                                                 <ComboBoxItem>Origem</ComboBoxItem>
                                                 <ComboBoxItem>Destino</ComboBoxItem>
                                             </ComboBox>
-                                            <ComboBox Grid.Column="1" x:Name="SourceTypeComboBox" Header="Conexão" PlaceholderText="Selecione" MinWidth="180">
+                                            <ComboBox Grid.Column="1" x:Name="SourceTypeComboBox" Header="Conexão" PlaceholderText="Selecione" MinWidth="180" SelectionChanged="SourceType_SelectionChanged">
                                                 <ComboBoxItem>REST API</ComboBoxItem>
                                                 <ComboBoxItem>MySQL</ComboBoxItem>
                                                 <ComboBoxItem>PostgreSQL</ComboBoxItem>
@@ -147,7 +162,7 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" x:Name="SourceOptionalTextBox" Header="Campo Opcional"/>
+                                            <TextBox Grid.Column="0" x:Name="SourceOptionalTextBox" Header="Campo Opcional" PlaceholderText="Selecione um tipo de conexão primeiro..."/>
                                         </Grid>
                                         <Grid ColumnSpacing="10">
                                             <Grid.ColumnDefinitions>
@@ -163,6 +178,12 @@
                                             <CheckBox Grid.Column="1" x:Name="SourceDeleteCheckBox" Content="Apagar" VerticalAlignment="Center" Margin="0,24,0,0" IsChecked="True"/>
                                             <CheckBox Grid.Column="2" x:Name="SourceEnabledCheckBox" Content="Ativo" VerticalAlignment="Center" Margin="0,24,0,0" IsChecked="True"/>
                                             <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                                                <Button x:Name="TestSourceButton" VerticalAlignment="Bottom" Click="Click_TestSource">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <SymbolIcon Symbol="World"/>
+                                                        <TextBlock Text="Testar"/>
+                                                    </StackPanel>
+                                                </Button>
                                                 <Button x:Name="DeleteSourceButton" VerticalAlignment="Bottom" Click="Click_DeleteSource">
                                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                                         <SymbolIcon Symbol="Delete"/>

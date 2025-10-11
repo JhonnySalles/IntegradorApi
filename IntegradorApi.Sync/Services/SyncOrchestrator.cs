@@ -40,22 +40,30 @@ public class SyncOrchestrator {
     /// </summary>
     public async Task RunAllActiveSyncsAsync() {
         _logger.Information("Iniciando orquestrador de sincronização...");
-        var connectionsOrigin = await _databaseService.GetConnectionsAsync();
-        var connectionsDestination = await _databaseService.GetConnectionsAsync();
+        var connectionsOrigin = await _databaseService.GetOriginConnectionsAsync();
+        var connectionsDestination = await _databaseService.GetDestinationConnectionsAsync();
 
         foreach (var connectionOrigin in connectionsOrigin.Where(c => c.Enabled)) {
-            var connectionDestination = connectionsDestination.Find(c => c.Enabled && c.TypeIntegration == connectionOrigin.TypeIntegration);
-            if (connectionDestination == null)
+            var destinationsForOrigin = connectionsDestination
+                .Where(dest => dest.Enabled && dest.TypeIntegration == connectionOrigin.TypeIntegration)
+                .ToList();
+
+            if (!destinationsForOrigin.Any()) {
+                _logger.Warning("Nenhuma conexão de destino ativa encontrada para a origem {Description}", connectionOrigin.Description);
                 continue;
+            }
 
             try {
-                var origin = GetService<Entity>(connectionOrigin);
-                var destination = GetService<Entity>(connectionDestination);
+                var originService = GetService<Entity>(connectionOrigin);
+                var destinationServices = destinationsForOrigin.Select(dest => GetService<Entity>(dest))
+                                            .Where(service => service != null)
+                                            .Cast<ISyncService<Entity>>()
+                                            .ToList();
 
-                if (origin == null || destination == null)
+                if (originService == null || !destinationServices.Any())
                     continue;
 
-                await RunSyncForConnectionAsync(origin, destination, connectionOrigin);
+                await RunSyncForConnectionAsync(originService, destinationServices, connectionOrigin);
             } catch (Exception ex) {
                 _logger.Error(ex, "Falha crítica ao sincronizar a conexão {Description}", connectionOrigin.Description);
             }
@@ -66,17 +74,22 @@ public class SyncOrchestrator {
     /// <summary>
     /// O método genérico que executa o fluxo de sincronização para uma conexão.
     /// </summary>
-    private async Task RunSyncForConnectionAsync<T>(ISyncService<T> serviceOrigin, ISyncService<T> serviceDestination, Connection connection) where T : Entity {
+    private async Task RunSyncForConnectionAsync<T>(ISyncService<T> serviceOrigin, List<ISyncService<T>> serviceDestinations, Connection connection) where T : Entity {
         _logger.Information("Processando conexão: {Description}", connection.Description);
 
         DateTime lastSyncDate = await _databaseService.GetLastSyncDateAsync(connection.Id);
         DateTime sinc = DateTime.UtcNow;
 
         async Task HandlePage(List<T> pageToSave, String extra) {
-            await serviceDestination.SaveAsync(pageToSave, extra);
+            foreach (var destinationService in serviceDestinations) {
+                _logger.Information("Enviando registros para {Description}", destinationService.Description);
+                await destinationService.SaveAsync(pageToSave, extra);
+            }
 
-            if (connection.Delete)
+            if (connection.Delete) {
+                _logger.Information("Deletando registros de {Description}", serviceOrigin.Description);
                 await serviceOrigin.DeleteAsync(pageToSave, extra);
+            }
         }
 
         await serviceOrigin.GetAsync(lastSyncDate, HandlePage);
