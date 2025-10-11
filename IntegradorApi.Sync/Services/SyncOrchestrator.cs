@@ -18,16 +18,16 @@ public class SyncOrchestrator {
 
     private SyncServiceBase<T>? GetService<T>(Connection connection) where T : Entity {
         switch (connection.TypeConnection) {
-            case ConnectionType.MySql:
+            case ConnectionType.MYSQL:
                 return connection.TypeIntegration switch {
-                    IntegrationType.MangaExtractor => new MangaDataSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.NovelExtractor => null,
+                    IntegrationType.MANGA_EXTRACTOR => new MangaDataSyncService(connection, _logger) as SyncServiceBase<T>,
+                    IntegrationType.NOVEL_EXTRACTOR => null,
                     _ => throw new InvalidOperationException("Integração ainda não impementada."),
                 };
-            case ConnectionType.RestApi:
+            case ConnectionType.APIREST:
                 return connection.TypeIntegration switch {
-                    IntegrationType.MangaExtractor => new MangaApiSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.NovelExtractor => null,
+                    IntegrationType.MANGA_EXTRACTOR => new MangaApiSyncService(connection, _logger) as SyncServiceBase<T>,
+                    IntegrationType.NOVEL_EXTRACTOR => null,
                     _ => throw new InvalidOperationException("Integração ainda não impementada."),
                 };
             default:

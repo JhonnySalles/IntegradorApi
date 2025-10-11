@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IntegradorApi.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250921135956_InitialSchema")]
-    partial class InitialSchema
+    [Migration("20251011175730_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace IntegradorApi.Data.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("IntegradorApi.Models.Connection", b =>
+            modelBuilder.Entity("IntegradorApi.Data.Models.Connection", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -38,6 +38,10 @@ namespace IntegradorApi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("url");
+
+                    b.Property<bool>("Delete")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("delete");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -60,7 +64,15 @@ namespace IntegradorApi.Data.Migrations
 
                     b.Property<int>("TypeConnection")
                         .HasColumnType("int")
-                        .HasColumnName("tipo");
+                        .HasColumnName("conexao");
+
+                    b.Property<int>("TypeDataSource")
+                        .HasColumnType("int")
+                        .HasColumnName("fonte");
+
+                    b.Property<int>("TypeIntegration")
+                        .HasColumnType("int")
+                        .HasColumnName("integracao");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -72,7 +84,7 @@ namespace IntegradorApi.Data.Migrations
                     b.ToTable("conexoes");
                 });
 
-            modelBuilder.Entity("IntegradorApi.Models.Sincronization", b =>
+            modelBuilder.Entity("IntegradorApi.Data.Models.Sincronization", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -101,9 +113,9 @@ namespace IntegradorApi.Data.Migrations
                     b.ToTable("sincronizacoes");
                 });
 
-            modelBuilder.Entity("IntegradorApi.Models.Sincronization", b =>
+            modelBuilder.Entity("IntegradorApi.Data.Models.Sincronization", b =>
                 {
-                    b.HasOne("IntegradorApi.Models.Connection", "Connection")
+                    b.HasOne("IntegradorApi.Data.Models.Connection", "Connection")
                         .WithMany("Sincronizations")
                         .HasForeignKey("ConnectionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -112,7 +124,7 @@ namespace IntegradorApi.Data.Migrations
                     b.Navigation("Connection");
                 });
 
-            modelBuilder.Entity("IntegradorApi.Models.Connection", b =>
+            modelBuilder.Entity("IntegradorApi.Data.Models.Connection", b =>
                 {
                     b.Navigation("Sincronizations");
                 });

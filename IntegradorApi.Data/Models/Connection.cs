@@ -10,6 +10,10 @@ public class Connection {
     [Column("id")]
     public int Id { get; set; }
 
+    [Required]
+    [Column("fonte")]
+    public DataSourceType TypeDataSource { get; set; }
+
     [Column("descricao")]
     public string Description { get; set; }
 
@@ -31,7 +35,7 @@ public class Connection {
     public string Optional { get; set; }
 
     [Required]
-    [Column("tipo")]
+    [Column("integracao")]
     public IntegrationType TypeIntegration { get; set; }
 
     [Column("delete")]

@@ -12,7 +12,12 @@ public class AppDbContext : DbContext {
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<Connection>().HasKey(s => s.Id);
+        modelBuilder.Entity<Connection>(entity => {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.TypeIntegration).HasConversion<string>();
+            entity.Property(c => c.TypeDataSource).HasConversion<string>();
+            entity.Property(c => c.TypeConnection).HasConversion<string>();
+        });
         modelBuilder.Entity<Sincronization>().HasKey(s => s.Id);
     }
 

@@ -1,29 +1,25 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace IntegradorApi.Data.Migrations
-{
+namespace IntegradorApi.Data.Migrations {
     /// <inheritdoc />
-    public partial class InitialSchema : Migration
-    {
+    public partial class InitialCreate : Migration {
         /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
+        protected override void Up(MigrationBuilder migrationBuilder) {
             migrationBuilder.AlterDatabase()
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "conexoes",
-                columns: table => new
-                {
+                columns: table => new {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    fonte = table.Column<int>(type: "int", nullable: false),
                     descricao = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    tipo = table.Column<int>(type: "int", nullable: false),
+                    conexao = table.Column<int>(type: "int", nullable: false),
                     url = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     usuario = table.Column<string>(type: "longtext", nullable: false)
@@ -32,18 +28,18 @@ namespace IntegradorApi.Data.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     opcional = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    integracao = table.Column<int>(type: "int", nullable: false),
+                    delete = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     ativo = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
-                constraints: table =>
-                {
+                constraints: table => {
                     table.PrimaryKey("PK_conexoes", x => x.id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "sincronizacoes",
-                columns: table => new
-                {
+                columns: table => new {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     identificador_recurso = table.Column<string>(type: "longtext", nullable: false)
@@ -51,8 +47,7 @@ namespace IntegradorApi.Data.Migrations
                     sincronizacao = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     id_conexao = table.Column<int>(type: "int", nullable: false)
                 },
-                constraints: table =>
-                {
+                constraints: table => {
                     table.PrimaryKey("PK_sincronizacoes", x => x.id);
                     table.ForeignKey(
                         name: "FK_sincronizacoes_conexoes_id_conexao",
@@ -70,8 +65,7 @@ namespace IntegradorApi.Data.Migrations
         }
 
         /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
+        protected override void Down(MigrationBuilder migrationBuilder) {
             migrationBuilder.DropTable(
                 name: "sincronizacoes");
 

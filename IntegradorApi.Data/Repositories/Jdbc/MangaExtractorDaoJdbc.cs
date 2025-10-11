@@ -539,4 +539,12 @@ public class MangaExtractorDaoJdbc : IMangaExtractorDao {
     Task<List<string>> IMangaExtractorDao.GetTablesAsync() {
         throw new NotImplementedException();
     }
+
+    public Task<List<string>> GetTablesAsync(DateTime since) {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> ExistVolumeAsync(string tableName, Guid id) {
+        throw new NotImplementedException();
+    }
 }

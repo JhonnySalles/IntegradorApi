@@ -105,35 +105,8 @@
                         <ScrollViewer>
                             <Grid Padding="20" RowSpacing="20">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-
-                                <StackPanel Grid.Row="0" Spacing="10">
-                                    <TextBlock Text="Dados da Conexão de Destino" Style="{ThemeResource TitleTextBlockStyle}"/>
-                                    <TextBox x:Name="TxtLocalDataBaseDescription" Header="Descrição"/>
-                                    <Grid ColumnSpacing="10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox Grid.Column="0" x:Name="TxtLocalDataBaseAddress" Header="Endereço do Servidor"/>
-                                        <TextBox Grid.Column="1" x:Name="TxtLocalDataBasePort" Header="Porta" Width="100"/>
-                                    </Grid>
-                                    <Grid ColumnSpacing="10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox Grid.Column="0" x:Name="TxtLocalDataBaseUser" Header="Usuário"/>
-                                        <PasswordBox Grid.Column="1" x:Name="PswLocalDataBasePassword" Header="Senha" PasswordRevealMode="Hidden"/>
-                                    </Grid>
-                                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,10,0,0">
-                                        <Button x:Name="BtnCancelConnection" Content="Cancelar" Click="Click_CancelConnection"/>
-                                        <Button x:Name="BtnTestConnection" Content="Testar Conexão" Click="Click_TestConnection"/>
-                                        <Button x:Name="BtnSaveConnection" Content="Salvar Alterações" Style="{ThemeResource AccentButtonStyle}" Click="Click_SaveConnection"/>
-                                    </StackPanel>
-                                </StackPanel>
 
                                 <Grid Grid.Row="1">
                                     <Grid.RowDefinitions>
@@ -141,52 +114,69 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="Fontes de Dados de Origem" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,0,0,10"/>
+                                    <TextBlock Grid.Row="0" Text="Fontes de Dados" Style="{ThemeResource TitleTextBlockStyle}" Margin="0,0,0,10"/>
 
                                     <StackPanel Grid.Row="1" Spacing="10" Margin="0,0,0,20">
                                         <Grid ColumnSpacing="10">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <ComboBox Grid.Column="0" x:Name="OrigemTipoComboBox" Header="Tipo" PlaceholderText="Selecione" MinWidth="180">
+                                            <ComboBox Grid.Column="0" x:Name="SourceDataComboBox" Header="Fonte" PlaceholderText="Selecione" MinWidth="180">
+                                                <ComboBoxItem>Origem</ComboBoxItem>
+                                                <ComboBoxItem>Destino</ComboBoxItem>
+                                            </ComboBox>
+                                            <ComboBox Grid.Column="1" x:Name="SourceTypeComboBox" Header="Conexão" PlaceholderText="Selecione" MinWidth="180">
                                                 <ComboBoxItem>REST API</ComboBoxItem>
                                                 <ComboBoxItem>MySQL</ComboBoxItem>
                                                 <ComboBoxItem>PostgreSQL</ComboBoxItem>
                                             </ComboBox>
-                                            <TextBox Grid.Column="1" x:Name="OrigemDescricaoTextBox" Header="Descrição"/>
+                                            <TextBox Grid.Column="2" x:Name="SourceDescriptionTextBox" Header="Descrição"/>
                                         </Grid>
-                                        <TextBox x:Name="OrigemEnderecoTextBox" Header="Endereço (URL)"/>
+                                        <TextBox x:Name="SourceAddressTextBox" Header="Endereço (URL)"/>
                                         <Grid ColumnSpacing="10">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" x:Name="OrigemUserTextBox" Header="Usuário"/>
-                                            <TextBox Grid.Column="1" x:Name="OrigemPasswordTextBox" Header="Senha"/>
+                                            <TextBox Grid.Column="0" x:Name="SourceUserTextBox" Header="Usuário"/>
+                                            <TextBox Grid.Column="1" x:Name="SourcePasswordTextBox" Header="Senha"/>
                                         </Grid>
                                         <Grid ColumnSpacing="10">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" x:Name="SourceOptionalTextBox" Header="Campo Opcional"/>
+                                        </Grid>
+                                        <Grid ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" x:Name="OrigemOptionalTextBox" Header="Campo Opcional"/>
-                                            <CheckBox Grid.Column="1" x:Name="OrigemEnabledCheckBox" Content="Ativo" VerticalAlignment="Center" Margin="0,24,0,0" IsChecked="True"/>
+                                            <ComboBox Grid.Column="0" x:Name="SourceIntegrationComboBox" Header="Integração" PlaceholderText="Selecione" MinWidth="180">
+                                                <ComboBoxItem>Manga</ComboBoxItem>
+                                                <ComboBoxItem>Novel</ComboBoxItem>
+                                            </ComboBox>
+                                            <CheckBox Grid.Column="1" x:Name="SourceDeleteCheckBox" Content="Apagar" VerticalAlignment="Center" Margin="0,24,0,0" IsChecked="True"/>
+                                            <CheckBox Grid.Column="2" x:Name="SourceEnabledCheckBox" Content="Ativo" VerticalAlignment="Center" Margin="0,24,0,0" IsChecked="True"/>
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                                                <Button x:Name="DeleteSourceButton" VerticalAlignment="Bottom" Click="Click_DeleteSource">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <SymbolIcon Symbol="Delete"/>
+                                                        <TextBlock Text="Excluir"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button x:Name="AddingSourceButtons" VerticalAlignment="Bottom" Click="Click_AddSource">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <SymbolIcon Symbol="Add"/>
+                                                        <TextBlock Text="Adicionar"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
                                         </Grid>
-                                        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-                                            <Button x:Name="ExcluirOrigemButton" VerticalAlignment="Bottom" Click="Click_DeleteSource">
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <SymbolIcon Symbol="Delete"/>
-                                                    <TextBlock Text="Excluir"/>
-                                                </StackPanel>
-                                            </Button>
-                                            <Button x:Name="AdicionarOrigemButton" VerticalAlignment="Bottom" Click="Click_AddSource">
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <SymbolIcon Symbol="Add"/>
-                                                    <TextBlock Text="Adicionar"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
                                     </StackPanel>
 
                                     <controls:DataGrid Grid.Row="2" x:Name="SourceDataGrid" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" CanUserSortColumns="True" MinHeight="300" DoubleTapped="DoubleTapped_SourceDataGrid">
@@ -199,9 +189,13 @@
                                                 </controls:DataGridTemplateColumn.CellTemplate>
                                             </controls:DataGridTemplateColumn>
 
-                                            <controls:DataGridTextColumn Header="Tipo" Binding="{Binding TypeConnection}" Width="SizeToCells"/>
+                                            <controls:DataGridTextColumn Header="" Width="SizeToCells"/>
+                                            <controls:DataGridTextColumn Header="Fonte" Binding="{Binding TypeDataSource}" />
+                                            <controls:DataGridTextColumn Header="Conexão" Binding="{Binding TypeConnection}" />
                                             <controls:DataGridTextColumn Header="Descrição" Binding="{Binding Description}" Width="*"/>
                                             <controls:DataGridTextColumn Header="Endereço (URL)" Binding="{Binding Address}" Width="2*"/>
+                                            <controls:DataGridTextColumn Header="Integração" Binding="{Binding TypeIntegration}" />
+                                            <controls:DataGridCheckBoxColumn Header="Apagar" Binding="{Binding Delete, Mode=OneWay}" />
 
                                             <controls:DataGridTemplateColumn Width="SizeToHeader">
                                                 <controls:DataGridTemplateColumn.CellTemplate>
@@ -218,6 +212,46 @@
                                 </Grid>
                             </Grid>
                         </ScrollViewer>
+                    </TabViewItem.Content>
+                </TabViewItem>
+
+                <TabViewItem Header="Configuração" IsClosable="False">
+                    <TabViewItem.IconSource>
+                        <SymbolIconSource Symbol="Setting"/>
+                    </TabViewItem.IconSource>
+                    <TabViewItem.Content>
+                        <Grid Padding="20" RowSpacing="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Spacing="10">
+                                <TextBlock Text="Bando de dados" Style="{ThemeResource TitleTextBlockStyle}"/>
+                                <TextBox x:Name="TxtDataBaseDescription" Header="Descrição"/>
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" x:Name="TxtDataBaseAddress" Header="Endereço do Servidor"/>
+                                    <TextBox Grid.Column="1" x:Name="TxtDataBasePort" Header="Porta" Width="100"/>
+                                </Grid>
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" x:Name="TxtDataBaseUser" Header="Usuário"/>
+                                    <PasswordBox Grid.Column="1" x:Name="PswDataBasePassword" Header="Senha" PasswordRevealMode="Hidden"/>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,10,0,0">
+                                    <Button x:Name="BtnCancelConnection" Content="Cancelar" Click="Click_CancelConnection"/>
+                                    <Button x:Name="BtnTestConnection" Content="Testar Conexão" Click="Click_TestConnection"/>
+                                    <Button x:Name="BtnSaveConnection" Content="Salvar Alterações" Style="{ThemeResource AccentButtonStyle}" Click="Click_SaveConnection"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
                     </TabViewItem.Content>
                 </TabViewItem>
             </TabView.TabItems>

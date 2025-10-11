@@ -114,10 +114,10 @@ namespace IntegradorApi {
 
     private async void Click_TestConnection(object sender, RoutedEventArgs e) {
       var connectionStringBuilder = new MySqlConnectionStringBuilder {
-        Server = TxtLocalDataBaseAddress.Text,
-        Port = Convert.ToUInt32(TxtLocalDataBasePort.Text),
-        UserID = TxtLocalDataBaseUser.Text,
-        Password = PswLocalDataBasePassword.Password,
+        Server = TxtDataBaseAddress.Text,
+        Port = Convert.ToUInt32(TxtDataBasePort.Text),
+        UserID = TxtDataBaseUser.Text,
+        Password = PswDataBasePassword.Password,
         Database = GlobalConstants.DatabaseName,
         ConnectionTimeout = 5
       };
@@ -140,11 +140,11 @@ namespace IntegradorApi {
     private async void Click_SaveConnection(object sender, RoutedEventArgs e) {
       try {
         _settingsService.SaveConnectionSettings(
-            TxtLocalDataBaseDescription.Text,
-            TxtLocalDataBaseAddress.Text,
-            TxtLocalDataBasePort.Text,
-            TxtLocalDataBaseUser.Text,
-            PswLocalDataBasePassword.Password
+            TxtDataBaseDescription.Text,
+            TxtDataBaseAddress.Text,
+            TxtDataBasePort.Text,
+            TxtDataBaseUser.Text,
+            PswDataBasePassword.Password
         );
 
         await ApplyMigrationsAsync();
@@ -156,30 +156,36 @@ namespace IntegradorApi {
     }
 
     private async void Click_AddSource(object sender, RoutedEventArgs e) {
-      if (OrigemTipoComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(OrigemEnderecoTextBox.Text)) {
-        await ShowMessageDialog("Dados Incompletos", "Por favor, selecione um tipo e preencha o endereço (URL).");
+      if (SourceTypeComboBox.SelectedItem == null || SourceDataComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(SourceAddressTextBox.Text)) {
+        await ShowMessageDialog("Dados Incompletos", "Por favor, selecione uma conexão, fonte e preencha o endereço (URL).");
         return;
       }
 
       if (_connectEdit != null) {
-        _connectEdit.TypeConnection = (ConnectionType)OrigemTipoComboBox.SelectedIndex;
-        _connectEdit.Description = OrigemDescricaoTextBox.Text;
-        _connectEdit.Address = OrigemEnderecoTextBox.Text;
-        _connectEdit.User = OrigemUserTextBox.Text;
-        _connectEdit.Password = OrigemPasswordTextBox.Text;
-        _connectEdit.Optional = OrigemOptionalTextBox.Text;
-        _connectEdit.Enabled = OrigemEnabledCheckBox.IsChecked ?? false;
+        _connectEdit.TypeConnection = (ConnectionType)SourceTypeComboBox.SelectedIndex;
+        _connectEdit.TypeDataSource = (DataSourceType)SourceDataComboBox.SelectedIndex;
+        _connectEdit.Description = SourceDescriptionTextBox.Text;
+        _connectEdit.Address = SourceAddressTextBox.Text;
+        _connectEdit.User = SourceUserTextBox.Text;
+        _connectEdit.Password = SourcePasswordTextBox.Text;
+        _connectEdit.Optional = SourceOptionalTextBox.Text;
+        _connectEdit.Enabled = SourceEnabledCheckBox.IsChecked ?? false;
+        _connectEdit.Delete = SourceDeleteCheckBox.IsChecked ?? false;
+        _connectEdit.TypeIntegration = (IntegrationType)SourceTypeComboBox.SelectedIndex;
 
         await _databaseService.UpdateConnectionAsync(_connectEdit);
       } else {
         var newConnection = new Connection {
-          TypeConnection = (ConnectionType)OrigemTipoComboBox.SelectedIndex,
-          Description = OrigemDescricaoTextBox.Text,
-          Address = OrigemEnderecoTextBox.Text,
-          User = OrigemUserTextBox.Text,
-          Password = OrigemPasswordTextBox.Text,
-          Optional = OrigemOptionalTextBox.Text,
-          Enabled = OrigemEnabledCheckBox.IsChecked ?? false
+          TypeConnection = (ConnectionType)SourceTypeComboBox.SelectedIndex,
+          TypeDataSource = (DataSourceType)SourceDataComboBox.SelectedIndex,
+          Description = SourceDescriptionTextBox.Text,
+          Address = SourceAddressTextBox.Text,
+          User = SourceUserTextBox.Text,
+          Password = SourcePasswordTextBox.Text,
+          Optional = SourceOptionalTextBox.Text,
+          Enabled = SourceEnabledCheckBox.IsChecked ?? false,
+          Delete = SourceDeleteCheckBox.IsChecked ?? false,
+          TypeIntegration = (IntegrationType)SourceDataComboBox.SelectedIndex,
         };
 
         await _databaseService.AddConnectionAsync(newConnection);
@@ -241,27 +247,30 @@ namespace IntegradorApi {
 
 
       _connectEdit = selectedConnection;
-      OrigemDescricaoTextBox.Text = _connectEdit.Description;
-      OrigemEnderecoTextBox.Text = _connectEdit.Address;
-      OrigemUserTextBox.Text = _connectEdit.User;
-      OrigemPasswordTextBox.Text = _connectEdit.Password;
-      OrigemOptionalTextBox.Text = _connectEdit.Optional;
-      OrigemEnabledCheckBox.IsChecked = _connectEdit.Enabled;
-      OrigemTipoComboBox.SelectedIndex = (int)_connectEdit.TypeConnection;
+      SourceDescriptionTextBox.Text = _connectEdit.Description;
+      SourceAddressTextBox.Text = _connectEdit.Address;
+      SourceUserTextBox.Text = _connectEdit.User;
+      SourcePasswordTextBox.Text = _connectEdit.Password;
+      SourceOptionalTextBox.Text = _connectEdit.Optional;
+      SourceEnabledCheckBox.IsChecked = _connectEdit.Enabled;
+      SourceDeleteCheckBox.IsChecked = _connectEdit.Delete;
+      SourceTypeComboBox.SelectedIndex = (int)_connectEdit.TypeIntegration;
+      SourceDataComboBox.SelectedIndex = (int)_connectEdit.TypeDataSource;
+      SourceTypeComboBox.SelectedIndex = (int)_connectEdit.TypeConnection;
 
-      AdicionarOrigemButton.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new SymbolIcon(Symbol.Save), new TextBlock { Text = "Atualizar" } } };
+      AddingSourceButtons.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new SymbolIcon(Symbol.Save), new TextBlock { Text = "Atualizar" } } };
     }
 
     private void ClearSourceForm() {
       _connectEdit = null;
-      OrigemTipoComboBox.SelectedIndex = -1;
-      OrigemDescricaoTextBox.Text = string.Empty;
-      OrigemEnderecoTextBox.Text = string.Empty;
-      OrigemUserTextBox.Text = string.Empty;
-      OrigemPasswordTextBox.Text = string.Empty;
-      OrigemOptionalTextBox.Text = string.Empty;
-      OrigemEnabledCheckBox.IsChecked = true;
-      AdicionarOrigemButton.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new SymbolIcon(Symbol.Add), new TextBlock { Text = "Adicionar" } } };
+      SourceDescriptionTextBox.Text = string.Empty;
+      SourceAddressTextBox.Text = string.Empty;
+      SourceUserTextBox.Text = string.Empty;
+      SourcePasswordTextBox.Text = string.Empty;
+      SourceOptionalTextBox.Text = string.Empty;
+      SourceEnabledCheckBox.IsChecked = true;
+      SourceDeleteCheckBox.IsChecked = false;
+      AddingSourceButtons.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new SymbolIcon(Symbol.Add), new TextBlock { Text = "Adicionar" } } };
     }
 
     private void RefreshStatusIcons() {
@@ -275,7 +284,7 @@ namespace IntegradorApi {
 
       var connStringBuilder = new MySqlConnectionStringBuilder {
         Server = statusVm.Connection.Address,
-        Port = Convert.ToUInt32(TxtLocalDataBasePort.Text),
+        Port = Convert.ToUInt32(TxtDataBasePort.Text),
         UserID = statusVm.Connection.User,
         Password = statusVm.Connection.Password,
         Database = GlobalConstants.DatabaseName,
@@ -294,7 +303,7 @@ namespace IntegradorApi {
     private async Task TestSingleConnection(Connection connection) {
       var connStringBuilder = new MySqlConnectionStringBuilder {
         Server = connection.Address,
-        Port = Convert.ToUInt32(TxtLocalDataBasePort.Text),
+        Port = Convert.ToUInt32(TxtDataBasePort.Text),
         UserID = connection.User,
         Password = connection.Password,
         Database = GlobalConstants.DatabaseName,
@@ -317,11 +326,11 @@ namespace IntegradorApi {
     }
 
     private void ReadConfiguration() {
-      TxtLocalDataBaseDescription.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:Description");
-      TxtLocalDataBaseAddress.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:Address");
-      TxtLocalDataBasePort.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:Port");
-      TxtLocalDataBaseUser.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:User");
-      PswLocalDataBasePassword.Password = AppConfig.Configuration.GetConnectionString("LocalDatabase:Password");
+      TxtDataBaseDescription.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:Description");
+      TxtDataBaseAddress.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:Address");
+      TxtDataBasePort.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:Port");
+      TxtDataBaseUser.Text = AppConfig.Configuration.GetConnectionString("LocalDatabase:User");
+      PswDataBasePassword.Password = AppConfig.Configuration.GetConnectionString("LocalDatabase:Password");
     }
 
     private void LoadSyncButtonState() {
