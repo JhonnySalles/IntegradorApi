@@ -19,8 +19,9 @@ public class MangaApiService {
     /// <summary>
     /// Busca a lista de tabelas de manga disponíveis na API.
     /// </summary>
+    /// <returns>A lista de tabelas disponível.</returns>
     public async Task<List<string>?> GetTablesAsync() {
-        _logger.Information("Buscando lista de tabelas de manga...");
+        _logger.Information("Buscando lista de tabelas de Manga...");
         return await _apiClient.GetAsync<List<string>>("/api/manga-extractor/tables");
     }
 
@@ -30,6 +31,7 @@ public class MangaApiService {
     /// <param name="tableName">O nome da tabela para consultar.</param>
     /// <param name="lastUpdate">A data da última atualização para buscar registros mais novos.</param>
     /// <param name="page">O número da página a ser buscada (começa em 0).</param>
+    /// <returns>A lista paginada da entidade solicitada.</returns>
     public async Task<PagedApiResponse<MangaVolumeDto>?> GetUpdatesAsync(string tableName, DateTime lastUpdate, int page = 0) {
         _logger.Information("Buscando atualizações para a tabela {TableName}, página {Page}...", tableName, page);
 
@@ -49,26 +51,38 @@ public class MangaApiService {
         return await _apiClient.GetAsync<PagedApiResponse<MangaVolumeDto>>(requestUri);
     }
 
+    /// <summary>
+    /// Envia uma lista de volumes de novel para a API para serem criados ou atualizados.
+    /// </summary>
+    /// <param name="tableName">O nome da tabela de destino na API.</param>
+    /// <param name="volumes">A lista de objetos NovelVolume a ser enviada.</param>
+    /// <returns>Verdadeiro se o envio foi bem-sucedido.</returns>
     public async Task<bool> SendVolumesAsync(string tableName, List<MangaVolume> volumes) {
         if (volumes == null || !volumes.Any()) {
-            _logger.Information("Nenhum volume de mangá para enviar para a tabela {TableName}.", tableName);
+            _logger.Information("Nenhum volume de Manga para enviar para a tabela {TableName}.", tableName);
             return true;
         }
 
-        _logger.Information("Enviando {VolumeCount} volumes de mangá para a tabela {TableName}...", volumes.Count, tableName);
+        _logger.Information("Enviando {VolumeCount} volumes de Manga para a tabela {TableName}...", volumes.Count, tableName);
 
         var requestUri = $"/api/manga-extractor/tabela/{tableName}/lista";
 
         return await _apiClient.PatchAsync(requestUri, volumes);
     }
 
+    /// <summary>
+    /// Deleta uma lista de volumes de uma tabela específica.
+    /// </summary>
+    /// <param name="tableName">O nome da tabela para deletar.</param>
+    /// <param name="volumes">A lista de objetos NovelVolume a ser deletado.</param>
+    /// <returns>Verdadeiro se o delete foi bem-sucedido.</returns>
     public async Task<bool> DeleteVolumesAsync(string tableName, List<MangaVolume> volumes) {
         if (volumes == null || !volumes.Any()) {
             _logger.Information("Nenhum volume de mangá para deletar da tabela {TableName}.", tableName);
             return true;
         }
 
-        _logger.Information("Deletando {VolumeCount} volumes de mangá para a tabela {TableName}...", volumes.Count, tableName);
+        _logger.Information("Deletando {VolumeCount} volumes de Manga para a tabela {TableName}...", volumes.Count, tableName);
 
         var requestUri = $"/api/manga-extractor/tabela/{tableName}/lista";
 

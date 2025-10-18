@@ -1,27 +1,27 @@
 ﻿using IntegradorApi.Api.Services;
 using IntegradorApi.Data.Enums;
 using IntegradorApi.Data.Models;
-using IntegradorApi.Data.Models.MangaExtractor;
+using IntegradorApi.Data.Models.NovelExtractor;
 using IntegradorApi.Data.Services;
 using IntegradorApi.Sync.Interfaces;
 using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class MangaApiSyncService : SyncServiceBase<MangaVolume> {
+public class NovelApiSyncService : SyncServiceBase<NovelVolume> {
     private readonly ILogger _logger;
-    private MangaApiService _api;
+    private NovelApiService _api;
 
-    public MangaApiSyncService(Connection connection, ILogger logger) : base(connection) {
+    public NovelApiSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
     }
     protected override async void initialize() {
         var apiClient = new ApiClientService(Connection, _logger);
-        _api = new MangaApiService(apiClient, _logger);
+        _api = new NovelApiService(apiClient, _logger);
     }
 
-    public override async Task GetAsync(DateTime since, ProgressCallback<MangaVolume> onPageReceived) {
-        _logger.Information("Iniciando 'Loading' de Mangas para a conexão {Description}", Connection.Description);
+    public override async Task GetAsync(DateTime since, ProgressCallback<NovelVolume> onPageReceived) {
+        _logger.Information("Iniciando 'Loading' de Novels para a conexão {Description}", Connection.Description);
 
         var tables = await _api.GetTablesAsync();
         if (tables == null || !tables.Any()) {
@@ -41,9 +41,9 @@ public class MangaApiSyncService : SyncServiceBase<MangaVolume> {
                     _logger.Information("Nenhum dado novo encontrado na página {Page} para a tabela {Table}", currentPage, table);
                     hasNextPage = false;
                 } else {
-                    var entities = pagedResponse.Content.Select(dto => new MangaVolume {
+                    var entities = pagedResponse.Content.Select(dto => new NovelVolume {
                         Id = dto.Id,
-                        Manga = dto.Manga,
+                        Novel = dto.Novel,
                         Volume = dto.Volume,
                         Lingua = Enum.Parse<Linguagens>(dto.Lingua, true),
                         Arquivo = dto.Arquivo,
@@ -67,13 +67,13 @@ public class MangaApiSyncService : SyncServiceBase<MangaVolume> {
         }
     }
 
-    public override async Task SaveAsync(List<MangaVolume> entities, String extra) {
-        _logger.Information("Iniciando 'Save' de {Count} volumes de Mangas", entities.Count);
+    public override async Task SaveAsync(List<NovelVolume> entities, String extra) {
+        _logger.Information("Iniciando 'Save' de {Count} volumes de Novels", entities.Count);
         await _api.SendVolumesAsync(extra, entities);
     }
 
-    public override async Task DeleteAsync(List<MangaVolume> entities, String extra) {
-        _logger.Information("Iniciando 'Delete' de {Count} volumes de Mangas", entities.Count);
+    public override async Task DeleteAsync(List<NovelVolume> entities, String extra) {
+        _logger.Information("Iniciando 'Delete' de {Count} volumes de Novels", entities.Count);
         await _api.DeleteVolumesAsync(extra, entities);
     }
 }
