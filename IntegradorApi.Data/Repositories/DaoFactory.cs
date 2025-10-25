@@ -12,4 +12,12 @@ public static class DaoFactory {
     public static INovelExtractorDao CreateNovelExtractorDao(MySqlConnection connection, string dbName) {
         return new NovelExtractorDaoJdbc(connection, dbName);
     }
+
+    public static IDeckSubtitleDao CreateDeckSubtitleDao(MySqlConnection connection) {
+        return new DeckSubtitleDaoJdbc(connection);
+    }
+
+    public static IComicInfoDao CreateComicInfoDao(MySqlConnection connection) {
+        return new ComicInfoDaoJdbc(connection);
+    }
 }

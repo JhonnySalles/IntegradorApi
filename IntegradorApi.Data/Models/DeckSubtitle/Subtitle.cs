@@ -3,8 +3,7 @@
 namespace IntegradorApi.Data.Models.DeckSubtitle;
 
 [Serializable]
-public class Subtitle {
-    public Guid? Id { get; set; }
+public class Subtitle : Entity {
     public int Sequencia { get; set; }
     public int Episodio { get; set; }
     public Linguagens Linguagem { get; set; }

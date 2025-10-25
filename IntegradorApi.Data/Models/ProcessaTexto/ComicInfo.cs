@@ -2,97 +2,51 @@
 
 namespace IntegradorApi.Data.Models.ProcessaTexto;
 
-public class ComicInfo {
-    public Guid? Id { get; set; }
-
+public class ComicInfo : Entity {
     public long? IdMal { get; set; }
-
     public string Comic { get; set; }
-
     public string Title { get; set; }
-
     public string Series { get; set; }
-
     public float Number { get; set; }
-
     public int Volume { get; set; }
-
     public string? Notes { get; set; }
-
     public int? Year { get; set; }
-
     public int? Month { get; set; }
-
     public int? Day { get; set; }
-
     public string? Writer { get; set; }
-
     public string? Penciller { get; set; }
-
     public string? Inker { get; set; }
-
     public string? CoverArtist { get; set; }
-
     public string? Colorist { get; set; }
-
     public string? Letterer { get; set; }
-
     public string? Publisher { get; set; }
-
     public string? Tags { get; set; }
-
     public string? Web { get; set; }
-
     public string? Editor { get; set; }
-
     public string? Translator { get; set; }
-
     public int? PageCount { get; set; }
-
     public List<Pages>? Pages { get; set; }
-
     public int? Count { get; set; }
-
     public string? AlternateSeries { get; set; }
-
     public float? AlternateNumber { get; set; }
-
     public string? StoryArc { get; set; }
-
     public string? StoryArcNumber { get; set; }
-
     public string? SeriesGroup { get; set; }
-
     public int? AlternateCount { get; set; }
-
     public string? Summary { get; set; }
-
     public string? Imprint { get; set; }
-
     public string? Genre { get; set; }
-
     public string LanguageISO { get; set; }
-
     public string? Format { get; set; }
-
     public AgeRating? AgeRating { get; set; }
-
     public float? CommunityRating { get; set; }
-
     public YesNo? BlackAndWhite { get; set; }
-
     public Manga Manga { get; set; }
-
     public string? Characters { get; set; }
-
     public string? Teams { get; set; }
-
     public string? Locations { get; set; }
-
     public string? ScanInformation { get; set; }
-
     public string? MainCharacterOrTeam { get; set; }
-
     public string? Review { get; set; }
 
     public ComicInfo() {

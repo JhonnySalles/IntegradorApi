@@ -1,6 +1,5 @@
 ﻿using IntegradorApi.Api.Core;
 using IntegradorApi.Api.Models;
-using IntegradorApi.Data.Models.MangaExtractor;
 using IntegradorApi.Data.Services;
 using Serilog;
 using System.Web;
@@ -22,7 +21,7 @@ public class MangaApiService {
     /// <returns>A lista de tabelas disponível.</returns>
     public async Task<List<string>?> GetTablesAsync() {
         _logger.Information("Buscando lista de tabelas de Manga...");
-        return await _apiClient.GetAsync<List<string>>("/api/manga-extractor/tables");
+        return await _apiClient.GetAsync<List<string>>("/api/manga-extractor/tabelas");
     }
 
     /// <summary>
@@ -55,9 +54,9 @@ public class MangaApiService {
     /// Envia uma lista de volumes de novel para a API para serem criados ou atualizados.
     /// </summary>
     /// <param name="tableName">O nome da tabela de destino na API.</param>
-    /// <param name="volumes">A lista de objetos NovelVolume a ser enviada.</param>
+    /// <param name="volumes">A lista de objetos MangaVolumeDto a ser enviada.</param>
     /// <returns>Verdadeiro se o envio foi bem-sucedido.</returns>
-    public async Task<bool> SendVolumesAsync(string tableName, List<MangaVolume> volumes) {
+    public async Task<bool> SendVolumesAsync(string tableName, List<MangaVolumeDto> volumes) {
         if (volumes == null || !volumes.Any()) {
             _logger.Information("Nenhum volume de Manga para enviar para a tabela {TableName}.", tableName);
             return true;
@@ -74,9 +73,9 @@ public class MangaApiService {
     /// Deleta uma lista de volumes de uma tabela específica.
     /// </summary>
     /// <param name="tableName">O nome da tabela para deletar.</param>
-    /// <param name="volumes">A lista de objetos NovelVolume a ser deletado.</param>
+    /// <param name="volumes">A lista de objetos MangaVolumeDto a ser deletado.</param>
     /// <returns>Verdadeiro se o delete foi bem-sucedido.</returns>
-    public async Task<bool> DeleteVolumesAsync(string tableName, List<MangaVolume> volumes) {
+    public async Task<bool> DeleteVolumesAsync(string tableName, List<MangaVolumeDto> volumes) {
         if (volumes == null || !volumes.Any()) {
             _logger.Information("Nenhum volume de mangá para deletar da tabela {TableName}.", tableName);
             return true;

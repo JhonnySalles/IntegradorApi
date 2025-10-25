@@ -21,13 +21,17 @@ public class SyncOrchestrator {
             case ConnectionType.MYSQL:
                 return connection.TypeIntegration switch {
                     IntegrationType.MANGA_EXTRACTOR => new MangaDataSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.NOVEL_EXTRACTOR => null,
+                    IntegrationType.NOVEL_EXTRACTOR => new NovelDataSyncService(connection, _logger) as SyncServiceBase<T>,
+                    IntegrationType.DECKSUBTITLE => new DeckSubtitleDataSyncService(connection, _logger) as SyncServiceBase<T>,
+                    IntegrationType.COMICINFO => new ComicInfoDataSyncService(connection, _logger) as SyncServiceBase<T>,
                     _ => throw new InvalidOperationException("Integração ainda não impementada."),
                 };
             case ConnectionType.APIREST:
                 return connection.TypeIntegration switch {
                     IntegrationType.MANGA_EXTRACTOR => new MangaApiSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.NOVEL_EXTRACTOR => null,
+                    IntegrationType.NOVEL_EXTRACTOR => new NovelApiSyncService(connection, _logger) as SyncServiceBase<T>,
+                    IntegrationType.DECKSUBTITLE => new DeckSubtitleApiSyncService(connection, _logger) as SyncServiceBase<T>,
+                    IntegrationType.COMICINFO => new ComicInfoApiSyncService(connection, _logger) as SyncServiceBase<T>,
                     _ => throw new InvalidOperationException("Integração ainda não impementada."),
                 };
             default:
