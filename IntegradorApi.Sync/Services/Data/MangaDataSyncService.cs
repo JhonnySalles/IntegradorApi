@@ -8,7 +8,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class MangaDataSyncService : SyncServiceBase<MangaVolume> {
+public class MangaDataSyncService : SyncDataServiceBase<MangaVolume> {
     private readonly ILogger _logger;
     private IMangaExtractorDao _dao;
 
@@ -16,7 +16,7 @@ public class MangaDataSyncService : SyncServiceBase<MangaVolume> {
         _logger = logger;
     }
 
-    protected override async void initialize() {
+    protected override async void Initialize() {
         var dbConnection = new MySqlConnection(Connection.Address);
         await dbConnection.OpenAsync();
         _dao = DaoFactory.CreateMangaExtractorDao(dbConnection, Connection.Optional);

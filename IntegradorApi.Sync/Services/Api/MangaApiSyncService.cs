@@ -10,7 +10,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class MangaApiSyncService : SyncServiceBase<MangaVolume> {
+public class MangaApiSyncService : SyncApiServiceBase<MangaVolume> {
     private readonly ILogger _logger;
     private MangaApiService _api;
 

@@ -8,7 +8,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class NovelDataSyncService : SyncServiceBase<NovelVolume> {
+public class NovelDataSyncService : SyncDataServiceBase<NovelVolume> {
     private readonly ILogger _logger;
     private INovelExtractorDao _dao;
 
@@ -16,7 +16,7 @@ public class NovelDataSyncService : SyncServiceBase<NovelVolume> {
         _logger = logger;
     }
 
-    protected override async void initialize() {
+    protected override async void Initialize() {
         var dbConnection = new MySqlConnection(Connection.Address);
         await dbConnection.OpenAsync();
         _dao = DaoFactory.CreateNovelExtractorDao(dbConnection, Connection.Optional);

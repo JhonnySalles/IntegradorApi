@@ -10,7 +10,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class ComicInfoApiSyncService : SyncServiceBase<ComicInfo> {
+public class ComicInfoApiSyncService : SyncApiServiceBase<ComicInfo> {
     private readonly ILogger _logger;
     private ComicInfoApiService _api;
 

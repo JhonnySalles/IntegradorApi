@@ -8,7 +8,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class ComicInfoDataSyncService : SyncServiceBase<ComicInfo> {
+public class ComicInfoDataSyncService : SyncDataServiceBase<ComicInfo> {
     private readonly ILogger _logger;
     private IComicInfoDao _dao;
 
@@ -16,7 +16,7 @@ public class ComicInfoDataSyncService : SyncServiceBase<ComicInfo> {
         _logger = logger;
     }
 
-    protected override async void initialize() {
+    protected override async void Initialize() {
         var dbConnection = new MySqlConnection(Connection.Address);
         await dbConnection.OpenAsync();
         _dao = DaoFactory.CreateComicInfoDao(dbConnection);

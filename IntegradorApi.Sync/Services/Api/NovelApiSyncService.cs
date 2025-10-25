@@ -10,7 +10,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class NovelApiSyncService : SyncServiceBase<NovelVolume> {
+public class NovelApiSyncService : SyncApiServiceBase<NovelVolume> {
     private readonly ILogger _logger;
     private NovelApiService _api;
 

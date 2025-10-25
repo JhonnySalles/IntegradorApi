@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using IntegradorApi.Data.Models;
+﻿using IntegradorApi.Data.Models;
 using IntegradorApi.Sync.Interfaces;
 
 namespace IntegradorApi.Sync.Services;
@@ -17,26 +16,15 @@ public abstract class SyncServiceBase<T> : ISyncService<T> where T : Entity {
     protected readonly Connection Connection;
 
     /// <summary>
-    /// Classe de mapper para conversão de DTO em Entidade ou Entidade em DTO.
-    /// É protegida para que as classes filhas possam acessá-la.
-    /// </summary>
-    protected readonly IMapper Mapper;
-
-    /// <summary>
     /// O construtor exige que uma conexão seja fornecida ao criar uma instância do serviço.
     /// </summary>
     /// <param name="connection">A configuração da conexão.</param>
     protected SyncServiceBase(Connection connection) {
         Connection = connection ?? throw new ArgumentNullException(nameof(connection));
         Initialize();
-
-        var config = CreateMapperInstance();
-        config.AssertConfigurationIsValid();
-        Mapper = config.CreateMapper();
     }
 
     protected abstract void Initialize();
-    protected abstract MapperConfiguration CreateMapperInstance();
 
     public String Description() {
         return Connection.Description;

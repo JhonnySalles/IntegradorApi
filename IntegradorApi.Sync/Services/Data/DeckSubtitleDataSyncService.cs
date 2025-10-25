@@ -8,7 +8,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class DeckSubtitleDataSyncService : SyncServiceBase<Subtitle> {
+public class DeckSubtitleDataSyncService : SyncDataServiceBase<Subtitle> {
     private readonly ILogger _logger;
     private IDeckSubtitleDao _dao;
 
@@ -16,7 +16,7 @@ public class DeckSubtitleDataSyncService : SyncServiceBase<Subtitle> {
         _logger = logger;
     }
 
-    protected override async void initialize() {
+    protected override async void Initialize() {
         var dbConnection = new MySqlConnection(Connection.Address);
         await dbConnection.OpenAsync();
         _dao = DaoFactory.CreateDeckSubtitleDao(dbConnection);

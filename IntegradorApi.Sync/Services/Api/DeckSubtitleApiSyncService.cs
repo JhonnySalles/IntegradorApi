@@ -10,7 +10,7 @@ using Serilog;
 
 namespace IntegradorApi.Sync.Services.Data;
 
-public class DeckSubtitleApiSyncService : SyncServiceBase<Subtitle> {
+public class DeckSubtitleApiSyncService : SyncApiServiceBase<Subtitle> {
     private readonly ILogger _logger;
     private DeckSubtitleApiService _api;
 
