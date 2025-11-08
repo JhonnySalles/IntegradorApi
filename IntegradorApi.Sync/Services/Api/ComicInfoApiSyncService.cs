@@ -12,12 +12,12 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class ComicInfoApiSyncService : SyncApiServiceBase<ComicInfo> {
     private readonly ILogger _logger;
-    private ComicInfoApiService _api;
+    private ComicInfoApiService? _api;
 
     public ComicInfoApiSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
     }
-    protected override async void Initialize() {
+    protected override void Initialize() {
         var apiClient = new ApiClientService(Connection, _logger);
         _api = new ComicInfoApiService(apiClient, _logger);
     }
@@ -35,7 +35,7 @@ public class ComicInfoApiSyncService : SyncApiServiceBase<ComicInfo> {
         bool hasNextPage;
 
         do {
-            var pagedResponse = await _api.GetUpdatesAsync(since, currentPage);
+            var pagedResponse = await _api!.GetUpdatesAsync(since, currentPage);
 
             if (pagedResponse?.Content == null || !pagedResponse.Content.Any()) {
                 _logger.Information("Nenhum dado novo encontrado na página {Page}", currentPage);
@@ -59,12 +59,12 @@ public class ComicInfoApiSyncService : SyncApiServiceBase<ComicInfo> {
     public override async Task SaveAsync(List<ComicInfo> entities, String extra) {
         _logger.Information("Iniciando 'Save' de {Count} registros de Comic Info", entities.Count);
         var dtos = Mapper.Map<List<ComicInfoDto>>(entities);
-        await _api.SendAsync(dtos);
+        await _api!.SendAsync(dtos);
     }
 
     public override async Task DeleteAsync(List<ComicInfo> entities, String extra) {
         _logger.Information("Iniciando 'Delete' de {Count} registros de Comic Info", entities.Count);
         var dtos = Mapper.Map<List<ComicInfoDto>>(entities);
-        await _api.DeleteAsync(dtos);
+        await _api!.DeleteAsync(dtos);
     }
 }

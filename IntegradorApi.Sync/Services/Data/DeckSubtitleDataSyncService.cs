@@ -10,7 +10,7 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class DeckSubtitleDataSyncService : SyncDataServiceBase<Subtitle> {
     private readonly ILogger _logger;
-    private IDeckSubtitleDao _dao;
+    private IDeckSubtitleDao? _dao;
 
     public DeckSubtitleDataSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
@@ -25,7 +25,7 @@ public class DeckSubtitleDataSyncService : SyncDataServiceBase<Subtitle> {
     public override async Task GetAsync(DateTime since, ProgressCallback<Subtitle> onPageReceived) {
         _logger.Information("Iniciando consulta de Deck Subtitle para a conexão {Description}", Connection.Description);
 
-        var tables = await _dao.GetTablesAsync(since);
+        var tables = await _dao!.GetTablesAsync(since);
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhum dado encontrada para a conexão {Description}", Connection.Description);
             return;
@@ -38,11 +38,11 @@ public class DeckSubtitleDataSyncService : SyncDataServiceBase<Subtitle> {
     public override async Task SaveAsync(List<Subtitle> entities, String extra) {
         _logger.Information("Salvando {Count} de itens na lista de Deck Subtitle", entities.Count);
 
-        if (!await _dao.ExistTableAsync(extra))
+        if (!await _dao!.ExistTableAsync(extra))
             await _dao.CreateTableAsync(extra);
 
         foreach (var entity in entities) {
-            if (await _dao.ExistAsync(extra, (Guid)entity.Id))
+            if (await _dao.ExistAsync(extra, entity.Id))
                 await _dao.DeleteAsync(extra, entity);
 
             await _dao.InsertAsync(extra, entity);
@@ -54,7 +54,7 @@ public class DeckSubtitleDataSyncService : SyncDataServiceBase<Subtitle> {
         _logger.Information("Deletando {Count} de itens na lista de Deck Subtitle", entities.Count);
 
         foreach (var entity in entities)
-            await _dao.DeleteAsync(extra, entity);
+            await _dao!.DeleteAsync(extra, entity);
     }
 
 }

@@ -31,7 +31,7 @@ namespace IntegradorApi {
   public sealed partial class IntegradorApi : Window {
 
     private readonly SettingsService _settingsService;
-    private System.Threading.Timer _syncTimer;
+    private System.Threading.Timer? _syncTimer;
     private AppWindow _appWindow;
 
     private readonly DatabaseService _databaseService;

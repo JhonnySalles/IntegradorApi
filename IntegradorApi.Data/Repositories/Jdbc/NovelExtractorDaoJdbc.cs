@@ -27,8 +27,8 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
     private const string INSERT_TEXTO_SQL = "INSERT INTO {0}_textos (id, id_capitulo, sequencia, texto, atualizacao) VALUES (@id, @id_capitulo, @sequencia, @texto, @atualizacao)";
     private const string INSERT_CAPA_SQL = "INSERT INTO {0}_capas (id, id_volume, novel, volume, linguagem, arquivo, extensao, capa, atualizacao) VALUES (@id, @id_volume, @novel, @volume, @linguagem, @arquivo, @extensao, @capa, @atualizacao)";
 
-    private const string DELETE_VOLUMES_SQL = "CALL delete_volume('{0}', '{1}')";
-    private const string DELETE_CAPITULOS_SQL = "CALL delete_capitulos('{0}', '{1}')";
+    private const string DELETE_VOLUMES_SQL = "CALL sp_delete_volume('{0}', '{1}')";
+    private const string DELETE_CAPITULOS_SQL = "CALL sp_delete_capitulos('{0}', '{1}')";
 
     private const string SELECT_VOLUMES_SQL = "SELECT id, novel, titulo, titulo_alternativo, serie, descricao, editora, autor, volume, linguagem, arquivo, is_favorito, is_processado, atualizacao FROM {0}_volumes";
     private const string SELECT_CAPITULOS_SQL = "SELECT id, novel, volume, capitulo, descricao, sequencia, linguagem, atualizacao FROM {0}_capitulos WHERE id_volume = @id_volume";
@@ -40,12 +40,16 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
     private const string SELECT_TEXTO_SQL_BY_ID = "SELECT id, sequencia, texto, atualizacao FROM {0}_textos WHERE id = @id";
 
     private const string SELECT_VOCABULARIO_SQL = "SELECT id, palavra, portugues, ingles, leitura, revisado, d.atualizacao FROM {0}_vocabularios V INNER JOIN _vocabularios D ON V.id_vocabulario = D.id WHERE V.{1} = @id;";
-    private const string DELETE_VOCABULARIO_SQL = "DELETE FROM {0}_vocabularios WHERE {1} = @id;";
     private const string INSERT_VOCABULARIO_SQL = "INSERT INTO {0}_vocabularios ({1}, id_vocabulario) VALUES (@id, @id_vocabulario);";
     private const string INSERT_VOCABULARIOS_SQL = "INSERT IGNORE INTO _vocabularios (id, palavra, portugues, ingles, leitura, revisado, atualizacao) VALUES (@id, @palavra, @portugues, @ingles, @leitura, @revisado, @atualizacao);";
 
-    private const string SELECT_COUNT_VOLUMES_SQL = "SELECT count(*) as total FROM {0}_volumes";
     private const string WHERE_DATE_SYNC_SQL = " WHERE atualizacao >= @atualizacao";
+
+    private const string CREATE_TABLE_SQL = "CALL sp_create_table(@tableName)";
+    private const string EXISTS_TABLE_SQL = "SELECT fn_table_exists(@tableName)";
+    private const string TABLES_SYNC_SQL = "CALL vw_sincronizacao()";
+    private const string LAST_TABLES_SYNC_SQL = "CALL sp_sincronizacao(@since)";
+    private const string EXISTS_VOLUME_SQL = "CALL sp_exists_volume(@tableName, @id)";
     #endregion
 
     #region Private Helper Methods
@@ -124,14 +128,12 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         command.Parameters.AddWithValue("@arquivo", obj.Arquivo);
         command.Parameters.AddWithValue("@isProcessado", obj.Processado);
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@id", obj.Id?.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         await command.ExecuteNonQueryAsync();
 
-        if (obj.Id.HasValue) {
-            if (obj.Capa != null) await UpdateCapaAsync(dbName, obj.Capa);
-            await DeleteVocabularioAsync(dbName, idVolume: obj.Id);
-            await InsertVocabularioAsync(dbName, idVolume: obj.Id, vocabulario: obj.Vocabularios);
-        }
+        if (obj.Capa != null)
+            await UpdateCapaAsync(dbName, obj.Capa);
+        await InsertVocabularioAsync(dbName, idVolume: obj.Id, vocabulario: obj.Vocabularios);
         return obj;
     }
 
@@ -144,7 +146,7 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         command.Parameters.AddWithValue("@extensao", obj.Extenssao);
         command.Parameters.AddWithValue("@capa", obj.Imagem ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@id", obj.Id?.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         await command.ExecuteNonQueryAsync();
         return obj;
     }
@@ -158,13 +160,10 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         command.Parameters.AddWithValue("@sequencia", obj.Sequencia);
         command.Parameters.AddWithValue("@linguagem", obj.Lingua.ToString());
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@id", obj.Id?.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         await command.ExecuteNonQueryAsync();
 
-        if (obj.Id.HasValue) {
-            await DeleteVocabularioAsync(dbName, idCapitulo: obj.Id);
-            await InsertVocabularioAsync(dbName, idCapitulo: obj.Id, vocabulario: obj.Vocabularios);
-        }
+        await InsertVocabularioAsync(dbName, idCapitulo: obj.Id, vocabulario: obj.Vocabularios);
         return obj;
     }
 
@@ -173,15 +172,14 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         command.Parameters.AddWithValue("@sequencia", obj.Sequencia);
         command.Parameters.AddWithValue("@texto", obj.Texto);
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@id", obj.Id?.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         await command.ExecuteNonQueryAsync();
         return obj;
     }
 
     public async Task<Guid?> InsertVolumeAsync(string dbName, NovelVolume obj) {
         await using var command = new MySqlCommand(string.Format(INSERT_VOLUMES_SQL, dbName), _conn);
-        var id = obj.Id ?? Guid.NewGuid();
-        command.Parameters.AddWithValue("@id", id.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         command.Parameters.AddWithValue("@novel", obj.Novel);
         command.Parameters.AddWithValue("@titulo", obj.Titulo);
         command.Parameters.AddWithValue("@tituloAlternativo", obj.TituloAlternativo);
@@ -196,16 +194,16 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
         await command.ExecuteNonQueryAsync();
 
-        if (obj.Capa != null) await InsertCapaAsync(dbName, id, obj.Capa);
-        await InsertVocabularioAsync(dbName, idVolume: id, vocabulario: obj.Vocabularios);
+        if (obj.Capa != null)
+            await InsertCapaAsync(dbName, obj.Id, obj.Capa);
+        await InsertVocabularioAsync(dbName, idVolume: obj.Id, vocabulario: obj.Vocabularios);
 
-        return id;
+        return obj.Id;
     }
 
     public async Task<Guid?> InsertCapaAsync(string dbName, Guid idVolume, NovelCapa obj) {
         await using var command = new MySqlCommand(string.Format(INSERT_CAPA_SQL, dbName), _conn);
-        var id = obj.Id ?? Guid.NewGuid();
-        command.Parameters.AddWithValue("@id", id.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         command.Parameters.AddWithValue("@id_volume", idVolume.ToString());
         command.Parameters.AddWithValue("@novel", obj.Novel);
         command.Parameters.AddWithValue("@volume", obj.Volume);
@@ -215,13 +213,12 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         command.Parameters.AddWithValue("@capa", obj.Imagem ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
         await command.ExecuteNonQueryAsync();
-        return id;
+        return obj.Id;
     }
 
     public async Task<Guid?> InsertCapituloAsync(string dbName, Guid idVolume, NovelCapitulo obj) {
         await using var command = new MySqlCommand(string.Format(INSERT_CAPITULOS_SQL, dbName), _conn);
-        var id = obj.Id ?? Guid.NewGuid();
-        command.Parameters.AddWithValue("@id", id.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         command.Parameters.AddWithValue("@id_volume", idVolume.ToString());
         command.Parameters.AddWithValue("@novel", obj.Novel);
         command.Parameters.AddWithValue("@volume", obj.Volume);
@@ -232,30 +229,29 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
         await command.ExecuteNonQueryAsync();
 
-        await InsertVocabularioAsync(dbName, idCapitulo: id, vocabulario: obj.Vocabularios);
+        await InsertVocabularioAsync(dbName, idCapitulo: obj.Id, vocabulario: obj.Vocabularios);
 
-        return id;
+        return obj.Id;
     }
 
     public async Task<Guid?> InsertTextoAsync(string dbName, Guid idCapitulo, NovelTexto obj) {
         await using var command = new MySqlCommand(string.Format(INSERT_TEXTO_SQL, dbName), _conn);
-        var id = obj.Id ?? Guid.NewGuid();
-        command.Parameters.AddWithValue("@id", id.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         command.Parameters.AddWithValue("@id_capitulo", idCapitulo.ToString());
         command.Parameters.AddWithValue("@sequencia", obj.Sequencia);
         command.Parameters.AddWithValue("@texto", obj.Texto);
         command.Parameters.AddWithValue("@atualizacao", obj.Atualizacao ?? (object)DBNull.Value);
         await command.ExecuteNonQueryAsync();
-        return id;
+        return obj.Id;
     }
 
     public async Task<NovelVolume?> SelectVolumeAsync(string dbName, Guid id) {
         await using var command = new MySqlCommand(string.Format(SELECT_VOLUME_SQL, dbName), _conn);
         command.Parameters.AddWithValue("@id", id.ToString());
         await using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync()) {
+        if (await reader.ReadAsync())
             return await GetVolumeFromReaderAsync(reader);
-        }
+
         return null;
     }
 
@@ -282,9 +278,9 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         await using var command = new MySqlCommand(string.Format(SELECT_CAPITULO_SQL, dbName), _conn);
         command.Parameters.AddWithValue("@id", id.ToString());
         await using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync()) {
+        if (await reader.ReadAsync())
             return await GetCapituloFromReaderAsync(reader);
-        }
+
         return null;
     }
 
@@ -292,9 +288,9 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         await using var command = new MySqlCommand(string.Format(SELECT_TEXTO_SQL_BY_ID, dbName), _conn);
         command.Parameters.AddWithValue("@id", id.ToString());
         await using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync()) {
+        if (await reader.ReadAsync())
             return GetTextoFromReader(reader);
-        }
+
         return null;
     }
 
@@ -302,9 +298,9 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         var list = new List<NovelVolume>();
         await using var command = new MySqlCommand(string.Format(SELECT_VOLUMES_SQL, dbName), _conn);
         await using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) {
+        while (await reader.ReadAsync())
             list.Add(await GetVolumeFromReaderAsync(reader));
-        }
+
         return list;
     }
 
@@ -314,9 +310,9 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         await using var command = new MySqlCommand(sql, _conn);
         command.Parameters.AddWithValue("@atualizacao", since);
         await using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) {
+        while (await reader.ReadAsync())
             list.Add(await GetVolumeFromReaderAsync(reader));
-        }
+
         return list;
     }
 
@@ -325,9 +321,9 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         await using var command = new MySqlCommand(string.Format(SELECT_CAPITULOS_SQL, dbName), _conn);
         command.Parameters.AddWithValue("@id_volume", idVolume.ToString());
         await using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) {
+        while (await reader.ReadAsync())
             list.Add(await GetCapituloFromReaderAsync(reader));
-        }
+
         return list;
     }
 
@@ -336,9 +332,9 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         await using var command = new MySqlCommand(string.Format(SELECT_TEXTOS_SQL, dbName), _conn);
         command.Parameters.AddWithValue("@id_capitulo", idCapitulo.ToString());
         await using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) {
+        while (await reader.ReadAsync())
             list.Add(GetTextoFromReader(reader));
-        }
+
         return list;
     }
 
@@ -391,8 +387,7 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         try {
             foreach (var vocab in vocabulario) {
                 await using var cmdVocab = new MySqlCommand(INSERT_VOCABULARIOS_SQL, _conn, transaction);
-                var vocabId = vocab.Id ?? Guid.NewGuid();
-                cmdVocab.Parameters.AddWithValue("@id", vocabId.ToString());
+                cmdVocab.Parameters.AddWithValue("@id", vocab.Id.ToString());
                 cmdVocab.Parameters.AddWithValue("@palavra", vocab.Palavra);
                 cmdVocab.Parameters.AddWithValue("@portugues", vocab.Portugues);
                 cmdVocab.Parameters.AddWithValue("@ingles", vocab.Ingles);
@@ -403,7 +398,7 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
 
                 await using var cmdLink = new MySqlCommand(string.Format(INSERT_VOCABULARIO_SQL, dbName, campo), _conn, transaction);
                 cmdLink.Parameters.AddWithValue("@id", id.ToString());
-                cmdLink.Parameters.AddWithValue("@id_vocabulario", vocabId.ToString());
+                cmdLink.Parameters.AddWithValue("@id_vocabulario", vocab.Id.ToString());
                 await cmdLink.ExecuteNonQueryAsync();
             }
             await transaction.CommitAsync();
@@ -413,48 +408,54 @@ public class NovelExtractorDaoJdbc : INovelExtractorDao {
         }
     }
 
-    public async Task DeleteVocabularioAsync(string dbName, Guid? idVolume = null, Guid? idCapitulo = null) {
-        string? campo = null;
-        Guid? id = null;
-
-        if (idVolume.HasValue) {
-            campo = "id_volume";
-            id = idVolume;
-        } else if (idCapitulo.HasValue) {
-            campo = "id_capitulo";
-            id = idCapitulo;
-        }
-
-        if (string.IsNullOrEmpty(campo) || !id.HasValue) {
-            return;
-        }
-
-        await using var command = new MySqlCommand(string.Format(DELETE_VOCABULARIO_SQL, dbName, campo), _conn);
-        command.Parameters.AddWithValue("@id", id.Value.ToString());
+    async Task INovelExtractorDao.CreateTableAsync(string tableName) {
+        await using var command = new MySqlCommand(CREATE_TABLE_SQL, _conn);
+        command.Parameters.AddWithValue("@tableName", tableName);
         await command.ExecuteNonQueryAsync();
     }
 
-    Task INovelExtractorDao.DeleteVocabularioAsync(string dbName, Guid? idVolume, Guid? idCapitulo, bool transaction) {
-        throw new NotImplementedException();
+    async Task<bool> INovelExtractorDao.ExistTableAsync(string tableName) {
+        await using var command = new MySqlCommand(EXISTS_TABLE_SQL, _conn);
+        command.Parameters.AddWithValue("@tableName", tableName);
+        var result = await command.ExecuteScalarAsync();
+
+        if (result == null || result == DBNull.Value)
+            return false;
+
+        return Convert.ToBoolean(result);
     }
 
-    Task INovelExtractorDao.CreateTableAsync(string tableName) {
-        throw new NotImplementedException();
+    async Task<List<string>> INovelExtractorDao.GetTablesAsync() {
+        var tables = new List<string>();
+        await using var command = new MySqlCommand(TABLES_SYNC_SQL, _conn);
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            tables.Add(reader.GetString(0));
+        return tables;
     }
 
-    Task<bool> INovelExtractorDao.ExistTableAsync(string tableName) {
-        throw new NotImplementedException();
+    public async Task<List<string>> GetTablesAsync(DateTime since) {
+        var tables = new List<string>();
+        await using var command = new MySqlCommand(LAST_TABLES_SYNC_SQL, _conn);
+        command.Parameters.AddWithValue("@since", since);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            tables.Add(reader.GetString(0));
+
+        return tables;
     }
 
-    Task<List<string>> INovelExtractorDao.GetTablesAsync() {
-        throw new NotImplementedException();
-    }
+    public async Task<bool> ExistVolumeAsync(string tableName, Guid id) {
+        await using var command = new MySqlCommand(EXISTS_VOLUME_SQL, _conn);
+        command.Parameters.AddWithValue("@tableName", tableName);
+        command.Parameters.AddWithValue("@id", id.ToString());
 
-    public Task<List<string>> GetTablesAsync(DateTime since) {
-        throw new NotImplementedException();
-    }
+        var result = await command.ExecuteScalarAsync();
 
-    public Task<bool> ExistVolumeAsync(string tableName, Guid id) {
-        throw new NotImplementedException();
+        if (result == null || result == DBNull.Value)
+            return false;
+
+        return Convert.ToBoolean(result);
     }
 }

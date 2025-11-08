@@ -10,7 +10,7 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class NovelDataSyncService : SyncDataServiceBase<NovelVolume> {
     private readonly ILogger _logger;
-    private INovelExtractorDao _dao;
+    private INovelExtractorDao? _dao;
 
     public NovelDataSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
@@ -25,7 +25,7 @@ public class NovelDataSyncService : SyncDataServiceBase<NovelVolume> {
     public override async Task GetAsync(DateTime since, ProgressCallback<NovelVolume> onPageReceived) {
         _logger.Information("Iniciando consulta de Novels para a conexão {Description}", Connection.Description);
 
-        var tables = await _dao.GetTablesAsync(since);
+        var tables = await _dao!.GetTablesAsync(since);
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhum dado encontrada para a conexão {Description}", Connection.Description);
             return;
@@ -38,7 +38,7 @@ public class NovelDataSyncService : SyncDataServiceBase<NovelVolume> {
     public override async Task SaveAsync(List<NovelVolume> entities, String extra) {
         _logger.Information("Salvando {Count} volumes de Novels", entities.Count);
 
-        if (!await _dao.ExistTableAsync(extra))
+        if (!await _dao!.ExistTableAsync(extra))
             await _dao.CreateTableAsync(extra);
 
         foreach (var volume in entities) {
@@ -59,7 +59,7 @@ public class NovelDataSyncService : SyncDataServiceBase<NovelVolume> {
         _logger.Information("Deletando {Count} volumes de Novels", entities.Count);
 
         foreach (var entity in entities)
-            await _dao.DeleteVolumeAsync(extra, entity);
+            await _dao!.DeleteVolumeAsync(extra, entity);
     }
 
 }

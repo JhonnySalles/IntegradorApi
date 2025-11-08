@@ -20,12 +20,11 @@ public class ComicInfoDaoJdbc : IComicInfoDao {
     private const string SELECT_BY_COMIC_AND_LANGUAGE_SQL = "SELECT id, comic, idMal, series, title, publisher, genre, imprint, seriesGroup, storyArc, maturityRating, alternativeSeries, language FROM comicinfo WHERE comic like @comic AND language = @language;";
     private const string SELECT_BY_ID_OR_COMIC_SQL = "SELECT id, comic, idMal, series, title, publisher, genre, imprint, seriesGroup, storyArc, maturityRating, alternativeSeries, language FROM comicinfo WHERE id = @id OR (language = @language AND (UPPER(comic) LIKE @searchTerm or UPPER(series) LIKE @searchTerm or UPPER(title) LIKE @searchTerm));";
     private const string FIND_FOR_UPDATE_SQL = "SELECT id, comic, idMal, series, title, publisher, genre, imprint, seriesGroup, storyArc, maturityRating, alternativeSeries, language FROM comicinfo WHERE atualizacao >= @lastUpdate";
+    private const string DELETE_SQL = "DELETE FROM comicinfo WHERE id = @id;";
+
     #endregion
 
     public async Task SaveAsync(ComicInfo obj) {
-        if (obj.Id == null)
-            obj.Id = Guid.NewGuid();
-
         await using var updateCommand = new MySqlCommand(UPDATE_SQL, _conn);
         AddParameters(updateCommand, obj);
         var rowsAffected = await updateCommand.ExecuteNonQueryAsync();
@@ -43,9 +42,9 @@ public class ComicInfoDaoJdbc : IComicInfoDao {
         command.Parameters.AddWithValue("@language", linguagem);
 
         await using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync()) {
+        if (await reader.ReadAsync())
             return MapReaderToComicInfo(reader);
-        }
+
         return null;
     }
 
@@ -56,9 +55,9 @@ public class ComicInfoDaoJdbc : IComicInfoDao {
         command.Parameters.AddWithValue("@searchTerm", $"%{comic.ToUpper()}%");
 
         await using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync()) {
+        if (await reader.ReadAsync())
             return MapReaderToComicInfo(reader);
-        }
+
         return null;
     }
 
@@ -68,14 +67,14 @@ public class ComicInfoDaoJdbc : IComicInfoDao {
         command.Parameters.AddWithValue("@lastUpdate", lastUpdate);
 
         await using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) {
+        while (await reader.ReadAsync())
             result.Add(MapReaderToComicInfo(reader));
-        }
+
         return result;
     }
 
     private void AddParameters(MySqlCommand command, ComicInfo obj) {
-        command.Parameters.AddWithValue("@id", obj.Id?.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         command.Parameters.AddWithValue("@comic", obj.Comic);
         command.Parameters.AddWithValue("@idMal", obj.IdMal ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@series", obj.Series);
@@ -106,5 +105,11 @@ public class ComicInfoDaoJdbc : IComicInfoDao {
             AlternateSeries = reader.IsDBNull("alternativeSeries") ? null : reader.GetString("alternativeSeries"),
             LanguageISO = reader.GetString("language")
         };
+    }
+
+    public async Task DeleteAsync(ComicInfo obj) {
+        await using var command = new MySqlCommand(DELETE_SQL, _conn);
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
+        await command.ExecuteNonQueryAsync();
     }
 }

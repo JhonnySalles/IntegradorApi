@@ -36,7 +36,6 @@ public interface IMangaExtractorDao {
     // VOCABULARIO
     Task<HashSet<MangaVocabulario>> SelectVocabularioAsync(string dbName, Guid? idVolume = null, Guid? idCapitulo = null, Guid? idPagina = null);
     Task InsertVocabularioAsync(string dbName, Guid? idVolume = null, Guid? idCapitulo = null, Guid? idPagina = null, ICollection<MangaVocabulario>? vocabulario = null);
-    Task DeleteVocabularioAsync(string dbName, Guid? idVolume = null, Guid? idCapitulo = null, Guid? idPagina = null);
 
     // Tabelas
     Task CreateTableAsync(string tableName);

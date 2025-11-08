@@ -8,7 +8,7 @@ namespace IntegradorApi.Services;
 
 public class UISink : ILogEventSink {
   private readonly IFormatProvider? _formatProvider;
-  private readonly MessageTemplateTextFormatter _formatter;
+  private readonly MessageTemplateTextFormatter? _formatter;
   public UISink(IFormatProvider? formatProvider) => _formatProvider = formatProvider;
 
   public UISink() {
@@ -17,7 +17,7 @@ public class UISink : ILogEventSink {
 
   public void Emit(LogEvent logEvent) {
     using var writer = new StringWriter();
-    _formatter.Format(logEvent, writer);
+    _formatter!.Format(logEvent, writer);
     var message = writer.ToString();
     LogEventBus.Raise(message);
   }

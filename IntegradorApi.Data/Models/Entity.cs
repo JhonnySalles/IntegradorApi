@@ -3,5 +3,5 @@
 /// Garante que toda entidade tenha uma propriedade de identificação.
 /// </summary>
 public abstract class Entity {
-    public Guid? Id { get; set; }
+    public Guid Id { get; set; }
 }

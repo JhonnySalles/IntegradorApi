@@ -12,8 +12,8 @@ public class Subtitle : Entity {
     public string Traducao { get; set; }
     public string? Vocabulario { get; set; }
 
-    public Subtitle() {
-        Id = null;
+    public Subtitle(Guid id) {
+        Id = id;
         Sequencia = 0;
         Episodio = 0;
         Linguagem = Linguagens.PORTUGUESE;
@@ -23,8 +23,8 @@ public class Subtitle : Entity {
         Vocabulario = null;
     }
 
-    public static Subtitle Create(Guid? id) {
-        return new Subtitle { Id = id };
+    public static Subtitle Create(Guid id) {
+        return new Subtitle(id);
     }
 
     public void Merge(Subtitle source) {
@@ -65,6 +65,6 @@ public class Subtitle : Entity {
     }
 
     public override int GetHashCode() {
-        return Id?.GetHashCode() ?? 0;
+        return Id.GetHashCode();
     }
 }

@@ -21,25 +21,26 @@ public class DeckSubtitleDaoJdbc : IDeckSubtitleDao {
     private const string DELETE_SQL = "DELETE FROM {0} WHERE id = @id;";
     private const string SELECT_ALL_SQL = "SELECT id, Episodio, Linguagem, TempoInicial, TempoFinal, Texto, Traducao, Vocabulario FROM {0}";
     private const string WHERE_DATE_SYNC_SQL = " WHERE atualizacao >= @atualizacao";
-    private const string CREATE_TABLE_SQL = "CALL create_table('{0}');";
-    private const string EXIST_TABLE_SQL = "SELECT Table_Name AS Tabela FROM information_schema.tables WHERE table_schema = @dbName AND Table_Name LIKE @tableName GROUP BY Tabela";
     private const string SELECT_LISTA_TABELAS_SQL = "SELECT Table_Name AS Tabela FROM information_schema.tables WHERE table_schema = @dbName GROUP BY Tabela";
+    private const string FIND_BY_ID_SQL = "SELECT id, Episodio FROM {0} WHERE id = @id;";
+    private const string CREATE_TABLE_SQL = "CALL create_table('{0}');";
+    private const string TABLES_SYNC_SQL = "CALL sp_sincronizacao(@since)";
+    private const string EXISTS_TABLE_SQL = "SELECT fn_table_exists(@tableName)";
     #endregion
 
     public async Task UpdateAsync(string dbName, Subtitle obj) {
         await using var command = new MySqlCommand(string.Format(UPDATE_SQL, dbName), _conn);
         AddParameters(command, obj);
-        command.Parameters.AddWithValue("@id", obj.Id?.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         await command.ExecuteNonQueryAsync();
     }
 
     public async Task<Guid?> InsertAsync(string dbName, Subtitle obj) {
-        var id = obj.Id ?? Guid.NewGuid();
         await using var command = new MySqlCommand(string.Format(INSERT_SQL, dbName), _conn);
-        command.Parameters.AddWithValue("@id", id.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         AddParameters(command, obj);
         await command.ExecuteNonQueryAsync();
-        return id;
+        return obj.Id;
     }
 
     public async Task<Subtitle?> SelectAsync(string dbName, Guid id) {
@@ -76,21 +77,13 @@ public class DeckSubtitleDaoJdbc : IDeckSubtitleDao {
 
     public async Task DeleteAsync(string dbName, Subtitle obj) {
         await using var command = new MySqlCommand(string.Format(DELETE_SQL, dbName), _conn);
-        command.Parameters.AddWithValue("@id", obj.Id?.ToString());
+        command.Parameters.AddWithValue("@id", obj.Id.ToString());
         await command.ExecuteNonQueryAsync();
     }
 
     public async Task CreateTableAsync(string tableName) {
         await using var command = new MySqlCommand(string.Format(CREATE_TABLE_SQL, tableName), _conn);
         await command.ExecuteNonQueryAsync();
-    }
-
-    public async Task<bool> ExistTableAsync(string tableName) {
-        await using var command = new MySqlCommand(string.Format(EXIST_TABLE_SQL, _conn.Database, $"%{tableName}%"), _conn);
-        command.Parameters.AddWithValue("@dbName", _conn.Database);
-        command.Parameters.AddWithValue("@tableName", $"%{tableName}%");
-        await using var reader = await command.ExecuteReaderAsync();
-        return reader.HasRows;
     }
 
     public async Task<List<string>> GetTablesAsync() {
@@ -115,8 +108,7 @@ public class DeckSubtitleDaoJdbc : IDeckSubtitleDao {
     }
 
     private Subtitle MapReaderToSubtitle(DbDataReader reader) {
-        return new Subtitle {
-            Id = reader.GetGuid("id"),
+        return new Subtitle(reader.GetGuid("id")) {
             Episodio = reader.GetInt32("Episodio"),
             Linguagem = Enum.Parse<Linguagens>(reader.GetString("Linguagem"), true),
             Tempo = reader.GetString("TempoInicial"),
@@ -124,5 +116,35 @@ public class DeckSubtitleDaoJdbc : IDeckSubtitleDao {
             Traducao = reader.GetString("Traducao"),
             Vocabulario = reader.IsDBNull("Vocabulario") ? null : reader.GetString("Vocabulario")
         };
+    }
+
+    public async Task<bool> ExistTableAsync(string tableName) {
+        await using var command = new MySqlCommand(EXISTS_TABLE_SQL, _conn);
+        command.Parameters.AddWithValue("@tableName", tableName);
+        var result = await command.ExecuteScalarAsync();
+
+        if (result == null || result == DBNull.Value)
+            return false;
+
+        return Convert.ToBoolean(result);
+    }
+
+    public async Task<bool> ExistAsync(string tableName, Guid id) {
+        await using var command = new MySqlCommand(string.Format(FIND_BY_ID_SQL, tableName), _conn);
+        command.Parameters.AddWithValue("@id", id.ToString());
+        await using var reader = await command.ExecuteReaderAsync();
+        return reader.HasRows;
+    }
+
+    public async Task<List<string>> GetTablesAsync(DateTime since) {
+        var tables = new List<string>();
+        await using var command = new MySqlCommand(TABLES_SYNC_SQL, _conn);
+        command.Parameters.AddWithValue("@since", since);
+
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            tables.Add(reader.GetString(0));
+
+        return tables;
     }
 }

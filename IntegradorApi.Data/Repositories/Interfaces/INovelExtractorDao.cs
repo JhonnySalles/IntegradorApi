@@ -32,7 +32,6 @@ public interface INovelExtractorDao {
     // VOCABULARIO
     Task<HashSet<NovelVocabulario>> SelectVocabularioAsync(string dbName, Guid? idVolume = null, Guid? idCapitulo = null);
     Task InsertVocabularioAsync(string dbName, Guid? idVolume = null, Guid? idCapitulo = null, ICollection<NovelVocabulario>? vocabulario = null);
-    Task DeleteVocabularioAsync(string dbName, Guid? idVolume = null, Guid? idCapitulo = null, bool transaction = true);
 
     // Tabelas
     Task CreateTableAsync(string tableName);

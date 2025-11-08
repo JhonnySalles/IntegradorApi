@@ -12,12 +12,12 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class NovelApiSyncService : SyncApiServiceBase<NovelVolume> {
     private readonly ILogger _logger;
-    private NovelApiService _api;
+    private NovelApiService? _api;
 
     public NovelApiSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
     }
-    protected override async void Initialize() {
+    protected override void Initialize() {
         var apiClient = new ApiClientService(Connection, _logger);
         _api = new NovelApiService(apiClient, _logger);
     }
@@ -30,7 +30,7 @@ public class NovelApiSyncService : SyncApiServiceBase<NovelVolume> {
     public override async Task GetAsync(DateTime since, ProgressCallback<NovelVolume> onPageReceived) {
         _logger.Information("Iniciando 'Loading' de Novels para a conexão {Description}", Connection.Description);
 
-        var tables = await _api.GetTablesAsync();
+        var tables = await _api!.GetTablesAsync();
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhuma tabela encontrada para a conexão {Description}", Connection.Description);
             return;
@@ -69,12 +69,12 @@ public class NovelApiSyncService : SyncApiServiceBase<NovelVolume> {
     public override async Task SaveAsync(List<NovelVolume> entities, String extra) {
         _logger.Information("Iniciando 'Save' de {Count} volumes de Novels", entities.Count);
         var dtos = Mapper.Map<List<NovelVolumeDto>>(entities);
-        await _api.SendVolumesAsync(extra, dtos);
+        await _api!.SendVolumesAsync(extra, dtos);
     }
 
     public override async Task DeleteAsync(List<NovelVolume> entities, String extra) {
         _logger.Information("Iniciando 'Delete' de {Count} volumes de Novels", entities.Count);
         var dtos = Mapper.Map<List<NovelVolumeDto>>(entities);
-        await _api.DeleteVolumesAsync(extra, dtos);
+        await _api!.DeleteVolumesAsync(extra, dtos);
     }
 }

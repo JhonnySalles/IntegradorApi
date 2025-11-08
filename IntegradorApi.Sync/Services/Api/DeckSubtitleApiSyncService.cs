@@ -12,12 +12,12 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class DeckSubtitleApiSyncService : SyncApiServiceBase<Subtitle> {
     private readonly ILogger _logger;
-    private DeckSubtitleApiService _api;
+    private DeckSubtitleApiService? _api;
 
     public DeckSubtitleApiSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
     }
-    protected override async void Initialize() {
+    protected override void Initialize() {
         var apiClient = new ApiClientService(Connection, _logger);
         _api = new DeckSubtitleApiService(apiClient, _logger);
     }
@@ -31,7 +31,7 @@ public class DeckSubtitleApiSyncService : SyncApiServiceBase<Subtitle> {
     public override async Task GetAsync(DateTime since, ProgressCallback<Subtitle> onPageReceived) {
         _logger.Information("Iniciando 'Loading' de Deck Subtitle para a conexão {Description}", Connection.Description);
 
-        var tables = await _api.GetTablesAsync();
+        var tables = await _api!.GetTablesAsync();
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhuma tabela encontrada para a conexão {Description}", Connection.Description);
             return;
@@ -70,12 +70,12 @@ public class DeckSubtitleApiSyncService : SyncApiServiceBase<Subtitle> {
     public override async Task SaveAsync(List<Subtitle> entities, String extra) {
         _logger.Information("Iniciando 'Save' de {Count} registros de Deck Subtitle", entities.Count);
         var dtos = Mapper.Map<List<SubtitleDto>>(entities);
-        await _api.SendVolumesAsync(extra, dtos);
+        await _api!.SendVolumesAsync(extra, dtos);
     }
 
     public override async Task DeleteAsync(List<Subtitle> entities, String extra) {
         _logger.Information("Iniciando 'Delete' de {Count} registros de Deck Subtitle", entities.Count);
         var dtos = Mapper.Map<List<SubtitleDto>>(entities);
-        await _api.DeleteVolumesAsync(extra, dtos);
+        await _api!.DeleteVolumesAsync(extra, dtos);
     }
 }

@@ -33,7 +33,7 @@ public class SettingsService {
     string output = JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
     File.WriteAllText(_settingsFilePath, output);
 
-    (AppConfig.Configuration as IConfigurationRoot).Reload();
+    (AppConfig.Configuration as IConfigurationRoot)?.Reload();
   }
 
   public void SetSincronizacaoStatus(bool novoStatus) {
@@ -43,11 +43,11 @@ public class SettingsService {
     if (jsonObj["AppSettings"] == null)
       jsonObj["AppSettings"] = new JObject();
 
-    jsonObj["AppSettings"]["Sincronizar"] = novoStatus;
+    jsonObj["AppSettings"]!["Sincronizar"] = novoStatus;
 
     string output = JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
     File.WriteAllText(_settingsFilePath, output);
 
-    (AppConfig.Configuration as IConfigurationRoot).Reload();
+    (AppConfig.Configuration as IConfigurationRoot)?.Reload();
   }
 }

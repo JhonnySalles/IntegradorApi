@@ -12,12 +12,12 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class MangaApiSyncService : SyncApiServiceBase<MangaVolume> {
     private readonly ILogger _logger;
-    private MangaApiService _api;
+    private MangaApiService? _api;
 
     public MangaApiSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
     }
-    protected override async void Initialize() {
+    protected override void Initialize() {
         var apiClient = new ApiClientService(Connection, _logger);
         _api = new MangaApiService(apiClient, _logger);
     }
@@ -31,7 +31,7 @@ public class MangaApiSyncService : SyncApiServiceBase<MangaVolume> {
     public override async Task GetAsync(DateTime since, ProgressCallback<MangaVolume> onPageReceived) {
         _logger.Information("Iniciando 'Loading' de Mangas para a conexão {Description}", Connection.Description);
 
-        var tables = await _api.GetTablesAsync();
+        var tables = await _api!.GetTablesAsync();
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhuma tabela encontrada para a conexão {Description}", Connection.Description);
             return;
@@ -70,12 +70,12 @@ public class MangaApiSyncService : SyncApiServiceBase<MangaVolume> {
     public override async Task SaveAsync(List<MangaVolume> entities, String extra) {
         _logger.Information("Iniciando 'Save' de {Count} volumes de Mangas", entities.Count);
         var dtos = Mapper.Map<List<MangaVolumeDto>>(entities);
-        await _api.SendVolumesAsync(extra, dtos);
+        await _api!.SendVolumesAsync(extra, dtos);
     }
 
     public override async Task DeleteAsync(List<MangaVolume> entities, String extra) {
         _logger.Information("Iniciando 'Delete' de {Count} volumes de Mangas", entities.Count);
         var dtos = Mapper.Map<List<MangaVolumeDto>>(entities);
-        await _api.DeleteVolumesAsync(extra, dtos);
+        await _api!.DeleteVolumesAsync(extra, dtos);
     }
 }

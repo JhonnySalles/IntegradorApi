@@ -10,7 +10,7 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class MangaDataSyncService : SyncDataServiceBase<MangaVolume> {
     private readonly ILogger _logger;
-    private IMangaExtractorDao _dao;
+    private IMangaExtractorDao? _dao;
 
     public MangaDataSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
@@ -25,7 +25,7 @@ public class MangaDataSyncService : SyncDataServiceBase<MangaVolume> {
     public override async Task GetAsync(DateTime since, ProgressCallback<MangaVolume> onPageReceived) {
         _logger.Information("Iniciando consulta de Mangas para a conexão {Description}", Connection.Description);
 
-        var tables = await _dao.GetTablesAsync(since);
+        var tables = await _dao!.GetTablesAsync(since);
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhum dado encontrada para a conexão {Description}", Connection.Description);
             return;
@@ -38,7 +38,7 @@ public class MangaDataSyncService : SyncDataServiceBase<MangaVolume> {
     public override async Task SaveAsync(List<MangaVolume> entities, String extra) {
         _logger.Information("Salvando {Count} volumes de Mangas", entities.Count);
 
-        if (!await _dao.ExistTableAsync(extra))
+        if (!await _dao!.ExistTableAsync(extra))
             await _dao.CreateTableAsync(extra);
 
         foreach (var volume in entities) {
@@ -61,7 +61,7 @@ public class MangaDataSyncService : SyncDataServiceBase<MangaVolume> {
         _logger.Information("Deletando {Count} volumes de Mangas", entities.Count);
 
         foreach (var entity in entities)
-            await _dao.DeleteVolumeAsync(extra, entity);
+            await _dao!.DeleteVolumeAsync(extra, entity);
     }
 
 }

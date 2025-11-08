@@ -1,11 +1,30 @@
 ﻿using IntegradorApi.Data.Enums.ComicInfo;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IntegradorApi.Data.Models.ProcessaTexto;
 
+[Table("exclusao")]
 public class ComicInfo : Entity {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Column("id")]
+    public Guid Id { get; set; }
+
+    [StringLength(250)]
+    [Column("idmal")]
     public long? IdMal { get; set; }
+
+    [StringLength(250)]
+    [Column("comic")]
     public string Comic { get; set; }
+
+    [StringLength(900)]
+    [Column("title")]
     public string Title { get; set; }
+
+    [StringLength(900)]
+    [Column("series")]
     public string Series { get; set; }
     public float Number { get; set; }
     public int Volume { get; set; }
@@ -19,25 +38,48 @@ public class ComicInfo : Entity {
     public string? CoverArtist { get; set; }
     public string? Colorist { get; set; }
     public string? Letterer { get; set; }
+
+    [StringLength(300)]
+    [Column("publisher")]
     public string? Publisher { get; set; }
     public string? Tags { get; set; }
     public string? Web { get; set; }
     public string? Editor { get; set; }
     public string? Translator { get; set; }
-    public int? PageCount { get; set; }
-    public List<Pages>? Pages { get; set; }
     public int? Count { get; set; }
+
+    [StringLength(900)]
+    [Column("alternativeseries")]
     public string? AlternateSeries { get; set; }
     public float? AlternateNumber { get; set; }
+
+    [StringLength(900)]
+    [Column("storyarc")]
     public string? StoryArc { get; set; }
     public string? StoryArcNumber { get; set; }
+
+    [StringLength(900)]
+    [Column("seriesgroup")]
     public string? SeriesGroup { get; set; }
     public int? AlternateCount { get; set; }
     public string? Summary { get; set; }
+
+
+    [StringLength(300)]
+    [Column("imprint")]
     public string? Imprint { get; set; }
+
+    [StringLength(900)]
+    [Column("genre")]
     public string? Genre { get; set; }
+
+    [StringLength(3)]
+    [Column("language")]
     public string LanguageISO { get; set; }
     public string? Format { get; set; }
+
+    [StringLength(100)]
+    [Column("maturityrating")]
     public AgeRating? AgeRating { get; set; }
     public float? CommunityRating { get; set; }
     public YesNo? BlackAndWhite { get; set; }
@@ -57,7 +99,7 @@ public class ComicInfo : Entity {
         Manga = Manga.Yes;
     }
 
-    public ComicInfo(Guid? id, long? idMal, string comic, string title, string series, string? publisher, string? alternateSeries,
+    public ComicInfo(Guid id, long? idMal, string comic, string title, string series, string? publisher, string? alternateSeries,
         string? storyArc, string? seriesGroup, string? imprint, string? genre, string languageISO, AgeRating? ageRating) {
         this.Id = id;
         this.IdMal = idMal;
@@ -75,7 +117,7 @@ public class ComicInfo : Entity {
         this.Manga = Manga.Yes;
     }
 
-    public static ComicInfo Create(Guid? id) {
+    public static ComicInfo Create(Guid id) {
         return new ComicInfo { Id = id };
     }
 

@@ -11,7 +11,7 @@ public static class LogManager {
   static LogManager() {
     string logPath = Path.Combine(AppContext.BaseDirectory, "log", "log-.txt");
 
-    Directory.CreateDirectory(Path.GetDirectoryName(logPath));
+    Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 
     Logger = new LoggerConfiguration()
         .MinimumLevel.Verbose()
