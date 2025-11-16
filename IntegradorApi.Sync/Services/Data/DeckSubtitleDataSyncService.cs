@@ -1,7 +1,6 @@
-﻿using IntegradorApi.Data.Models;
+﻿using IntegradorApi.Api.Services;
+using IntegradorApi.Data.Models;
 using IntegradorApi.Data.Models.DeckSubtitle;
-using IntegradorApi.Data.Repositories;
-using IntegradorApi.Data.Repositories.Interfaces;
 using IntegradorApi.Sync.Interfaces;
 using MySqlConnector;
 using Serilog;
@@ -10,7 +9,7 @@ namespace IntegradorApi.Sync.Services.Data;
 
 public class DeckSubtitleDataSyncService : SyncDataServiceBase<Subtitle> {
     private readonly ILogger _logger;
-    private IDeckSubtitleDao? _dao;
+    private DeckSubtitleDataService? _service;
 
     public DeckSubtitleDataSyncService(Connection connection, ILogger logger) : base(connection) {
         _logger = logger;
@@ -19,42 +18,28 @@ public class DeckSubtitleDataSyncService : SyncDataServiceBase<Subtitle> {
     protected override async void Initialize() {
         var dbConnection = new MySqlConnection(Connection.Address);
         await dbConnection.OpenAsync();
-        _dao = DaoFactory.CreateDeckSubtitleDao(dbConnection);
+        _service = new DeckSubtitleDataService(dbConnection, _logger);
     }
 
     public override async Task GetAsync(DateTime since, ProgressCallback<Subtitle> onPageReceived) {
         _logger.Information("Iniciando consulta de Deck Subtitle para a conexão {Description}", Connection.Description);
 
-        var tables = await _dao!.GetTablesAsync(since);
+        var tables = await _service!.GetTablesAsync(since);
         if (tables == null || !tables.Any()) {
             _logger.Warning("Nenhum dado encontrada para a conexão {Description}", Connection.Description);
             return;
         }
 
         foreach (var table in tables)
-            await onPageReceived.Invoke(await _dao.SelectAllAsync(table, since), table);
+            await onPageReceived.Invoke(await _service.SelectAllAsync(table, since), table);
     }
 
     public override async Task SaveAsync(List<Subtitle> entities, String extra) {
-        _logger.Information("Salvando {Count} de itens na lista de Deck Subtitle", entities.Count);
-
-        if (!await _dao!.ExistTableAsync(extra))
-            await _dao.CreateTableAsync(extra);
-
-        foreach (var entity in entities) {
-            if (await _dao.ExistAsync(extra, entity.Id))
-                await _dao.DeleteAsync(extra, entity);
-
-            await _dao.InsertAsync(extra, entity);
-
-        }
+        await _service!.SaveAsync(entities, extra);
     }
 
     public override async Task DeleteAsync(List<Subtitle> entities, String extra) {
-        _logger.Information("Deletando {Count} de itens na lista de Deck Subtitle", entities.Count);
-
-        foreach (var entity in entities)
-            await _dao!.DeleteAsync(extra, entity);
+        await _service!.DeleteAsync(entities, extra);
     }
 
 }
