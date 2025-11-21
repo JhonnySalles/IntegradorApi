@@ -56,8 +56,6 @@ public class NovelTextoDto {
 }
 
 public class NovelVocabularioDto {
-    // A estrutura precisa ser confirmada pela API,
-    // mas por enquanto criamos uma classe base.
     public Guid Id { get; set; }
     public string? Palavra { get; set; }
 }

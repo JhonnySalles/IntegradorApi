@@ -6,7 +6,7 @@ public class MangaVolumeDto {
     public Guid Id { get; set; }
     public string Manga { get; set; }
     public int Volume { get; set; }
-    public string? Lingua { get; set; } // A API retorna string, faremos a conversão depois
+    public string? Lingua { get; set; }
     public List<MangaCapituloDto> Capitulos { get; set; } = new();
     public List<MangaVocabularioDto> Vocabularios { get; set; } = new();
     public string? Arquivo { get; set; }
