@@ -40,6 +40,73 @@ public class ExclusaoDto {
     public HateoasLinks? Links { get; set; }
 }
 
+public class KanjaxPtDto {
+    [JsonProperty("id")]
+    public Guid Id { get; set; }
+    [JsonProperty("sequencia")]
+    public long Sequencia { get; set; }
+    [JsonProperty("kanji")]
+    public string? Kanji { get; set; }
+    [JsonProperty("keyword")]
+    public string? Keyword { get; set; }
+    [JsonProperty("meaning")]
+    public string? Meaning { get; set; }
+    [JsonProperty("koohii1")]
+    public string? Koohii1 { get; set; }
+    [JsonProperty("koohii2")]
+    public string? Koohii2 { get; set; }
+    [JsonProperty("onyomi")]
+    public string? Onyomi { get; set; }
+    [JsonProperty("kunyomi")]
+    public string? Kunyomi { get; set; }
+    [JsonProperty("onwords")]
+    public string? Onwords { get; set; }
+    [JsonProperty("kunwords")]
+    public string? Kunwords { get; set; }
+    [JsonProperty("jlpt")]
+    public int Jlpt { get; set; }
+    [JsonProperty("grade")]
+    public int Grade { get; set; }
+    [JsonProperty("freq")]
+    public int Freq { get; set; }
+    [JsonProperty("strokes")]
+    public int Strokes { get; set; }
+    [JsonProperty("variants")]
+    public string? Variants { get; set; }
+    [JsonProperty("radical")]
+    public string? Radical { get; set; }
+    [JsonProperty("parts")]
+    public string? Parts { get; set; }
+    [JsonProperty("utf8")]
+    public string? Utf8 { get; set; }
+    [JsonProperty("sjis")]
+    public string? Sjis { get; set; }
+    [JsonProperty("isTraduzido")]
+    public bool IsTraduzido { get; set; }
+    [JsonProperty("isChecado")]
+    public bool IsChecado { get; set; }
+    [JsonProperty("isRevisado")]
+    public bool IsRevisado { get; set; }
+    [JsonProperty("isSinaliza")]
+    public bool IsSinaliza { get; set; }
+    [JsonProperty("dataTraducao")]
+    public DateTime DataTraducao { get; set; }
+    [JsonProperty("dataCorrecao")]
+    public DateTime? DataCorrecao { get; set; }
+    [JsonProperty("observacao")]
+    public string? Observacao { get; set; }
+    [JsonProperty("kanjaxOriginal")]
+    public bool KanjaxOriginal { get; set; }
+    [JsonProperty("palavra")]
+    public string? Palavra { get; set; }
+    [JsonProperty("significado")]
+    public string? Significado { get; set; }
+    [JsonProperty("atualizacao")]
+    public DateTime Atualizacao { get; set; }
+    [JsonProperty("_links")]
+    public HateoasLinks? Links { get; set; }
+}
+
 public class KanjiInfoDto {
     [JsonProperty("id")]
     public Guid Id { get; set; }

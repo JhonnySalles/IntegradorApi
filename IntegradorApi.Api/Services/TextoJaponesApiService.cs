@@ -71,6 +71,34 @@ public class TextoJaponesApiService {
     }
     #endregion
 
+    #region KanjaxDto
+    public async Task<PagedApiResponse<KanjaxPtDto>?> GetUpdatesKanjaxDtoAsync(DateTime lastUpdate, int page = 0) {
+        _logger.Information("Buscando atualizações de KanjaxDto (TextoJapones), página {Page}...", page);
+        string formattedDate = lastUpdate.ToString("yyyy-MM-ddTHH:mm:ss");
+        var uriBuilder = new UriBuilder(_apiClient.GetBaseAddress()) {
+            Path = $"/api/texto-japones/kanjax-pt/atualizacao/{formattedDate}"
+        };
+        var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+        query["page"] = page.ToString();
+        query["size"] = Constants.DefaultPageSize.ToString();
+        query["direction"] = "asc";
+        uriBuilder.Query = query.ToString();
+        return await _apiClient.GetAsync<PagedApiResponse<KanjaxPtDto>>(uriBuilder.Uri.PathAndQuery);
+    }
+
+    public async Task<bool> SendAsync(List<KanjaxPtDto> lista) {
+        if (lista == null || !lista.Any()) return true;
+        _logger.Information("Enviando {Count} atualizações de KanjaxDto (TextoJapones)...", lista.Count);
+        return await _apiClient.PatchAsync("/api/texto-japones/kanjax-pt/lista", lista);
+    }
+
+    public async Task<bool> DeleteAsync(List<KanjaxPtDto> lista) {
+        if (lista == null || !lista.Any()) return true;
+        _logger.Information("Deletando {Count} atualizações de KanjaxDto (TextoJapones)...", lista.Count);
+        return await _apiClient.DeleteAsync("/api/texto-japones/kanjax-pt/lista", lista);
+    }
+    #endregion
+
     #region KanjiInfoDto
     public async Task<PagedApiResponse<KanjiInfoDto>?> GetUpdatesKanjiInfoAsync(DateTime lastUpdate, int page = 0) {
         _logger.Information("Buscando atualizações de KanjiInfo (TextoJapones), página {Page}...", page);
