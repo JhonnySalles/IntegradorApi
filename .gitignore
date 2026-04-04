@@ -90,3 +90,4 @@ _ReSharper*/
 appsettings.json
 appsettings.Development.json
 secrets.json
+.agent/*
