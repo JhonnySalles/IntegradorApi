@@ -1,14 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IntegradorApi.Data.Models.TextoJapones;
 
 [Table("kanjax_pt")]
-public class KanjaxPt {
+public class KanjaxPt : Entity {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column("id")]
-    public Guid Id { get; set; }
+    public new Guid Id { get; set; }
 
     [Required]
     [Column("Sequencia")]

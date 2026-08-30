@@ -5,6 +5,7 @@ using IntegradorApi.Data.Data;
 using IntegradorApi.Data.Models;
 using IntegradorApi.Data.Models.TextoIngles;
 using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 using Serilog;
 
 namespace IntegradorApi.Data.Services;

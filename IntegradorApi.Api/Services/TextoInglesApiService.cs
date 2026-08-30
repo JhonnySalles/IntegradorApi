@@ -4,6 +4,9 @@ using IntegradorApi.Api.Models.TextoIngles;
 using IntegradorApi.Data.Services;
 using Serilog;
 using System.Web;
+using ExclusaoDto = IntegradorApi.Api.Models.TextoIngles.ExclusaoDto;
+using RevisarDto = IntegradorApi.Api.Models.TextoIngles.RevisarDto;
+using VocabularioDto = IntegradorApi.Api.Models.TextoIngles.VocabularioDto;
 
 namespace IntegradorApi.Api.Services;
 

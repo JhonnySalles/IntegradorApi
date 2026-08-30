@@ -1,14 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IntegradorApi.Data.Models.TextoJapones;
 
 [Table("estatistica")]
-public class EstatisticaJapones {
+public class EstatisticaJapones : Entity {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column("id")]
-    public Guid Id { get; set; }
+    public new Guid Id { get; set; }
 
     [Column("sequencial")]
     public long? Sequencial { get; set; }

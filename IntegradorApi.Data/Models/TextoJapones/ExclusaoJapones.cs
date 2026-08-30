@@ -1,14 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IntegradorApi.Data.Models.TextoJapones;
 
 [Table("exclusao")]
-public class ExclusaoJapones {
+public class ExclusaoJapones : Entity {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column("id")]
-    public Guid Id { get; set; }
+    public new Guid Id { get; set; }
 
     [Required]
     [StringLength(250)]

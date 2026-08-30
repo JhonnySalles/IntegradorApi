@@ -24,7 +24,7 @@ public class DatabaseService {
             await using var context = CreateDbContext();
             return await context.Connections.ToListAsync();
         } catch (Exception ex) {
-            _logger.Error(ex, "Falha ao carregar conexıes");
+            _logger.Error(ex, "Falha ao carregar conex√µes");
             throw;
         }
     }
@@ -34,7 +34,7 @@ public class DatabaseService {
             await using var context = CreateDbContext();
             return await context.Connections.Where(c => c.TypeDataSource == DataSourceType.ORIGIN).ToListAsync();
         } catch (Exception ex) {
-            _logger.Error(ex, "Falha ao carregar conexıes de origem");
+            _logger.Error(ex, "Falha ao carregar conex√µes de origem");
             throw;
         }
     }
@@ -44,7 +44,7 @@ public class DatabaseService {
             await using var context = CreateDbContext();
             return await context.Connections.Where(c => c.TypeDataSource == DataSourceType.DESTINATION).ToListAsync();
         } catch (Exception ex) {
-            _logger.Error(ex, "Falha ao carregar conexıes de destino");
+            _logger.Error(ex, "Falha ao carregar conex√µes de destino");
             throw;
         }
     }
@@ -55,7 +55,7 @@ public class DatabaseService {
             context.Connections.Add(connection);
             await context.SaveChangesAsync();
         } catch (Exception ex) {
-            _logger.Error(ex, "Falha ao adicionar conex„o {ConnectionDesc}", connection.Description);
+            _logger.Error(ex, "Falha ao adicionar conex√£o {ConnectionDesc}", connection.Description);
             throw;
         }
     }
@@ -66,7 +66,7 @@ public class DatabaseService {
             context.Connections.Remove(connection);
             await context.SaveChangesAsync();
         } catch (Exception ex) {
-            _logger.Error(ex, "Falha ao deletar conex„o {ConnectionDesc}", connection.Description);
+            _logger.Error(ex, "Falha ao deletar conex√£o {ConnectionDesc}", connection.Description);
             throw;
         }
     }
@@ -76,30 +76,40 @@ public class DatabaseService {
             context.Connections.Update(connection);
             await context.SaveChangesAsync();
         } catch (Exception ex) {
-            _logger.Error(ex, "Falha ao atualizar conex„o {ConnectionDesc}", connection.Description);
+            _logger.Error(ex, "Falha ao atualizar conex√£o {ConnectionDesc}", connection.Description);
             throw;
         }
     }
 
-    public async Task<DateTime> GetLastSyncDateAsync(int connectionId) {
-        await using var context = CreateDbContext();
+    public async Task<DateTime> GetLastSyncDateAsync(int connectionId, string resourceIdentifier = "default") {
+        using var context = CreateDbContext();
         var lastSync = await context.Sincronizations
-            .Where(s => s.ConnectionId == connectionId)
+            .Where(s => s.ConnectionId == connectionId && (s.ResourceIdentifier == resourceIdentifier || string.IsNullOrEmpty(s.ResourceIdentifier)))
             .OrderByDescending(s => s.LastSyncronization)
             .FirstOrDefaultAsync();
-
-        return lastSync?.LastSyncronization ?? new DateTime(2000, 1, 1);
+        return lastSync?.LastSyncronization ?? DateTime.MinValue;
     }
 
     public async Task UpdateLastSyncDateAsync(int connectionId, DateTime syncDate) {
-        await using var context = CreateDbContext();
+        await UpdateLastSyncDateAsync(connectionId, "default", syncDate);
+    }
 
-        var syncRecord = new Sincronization {
-            ConnectionId = connectionId,
-            LastSyncronization = syncDate,
-            ResourceIdentifier = "general" // Identificador genÈrico para a conex„o
-        };
-        context.Sincronizations.Add(syncRecord);
+    public async Task UpdateLastSyncDateAsync(int connectionId, string resourceIdentifier, DateTime syncDate) {
+        using var context = CreateDbContext();
+        var syncRecord = await context.Sincronizations
+            .FirstOrDefaultAsync(s => s.ConnectionId == connectionId && s.ResourceIdentifier == resourceIdentifier);
+
+        if (syncRecord != null) {
+            syncRecord.LastSyncronization = syncDate;
+            context.Sincronizations.Update(syncRecord);
+        } else {
+            syncRecord = new Sincronization {
+                ConnectionId = connectionId,
+                ResourceIdentifier = resourceIdentifier,
+                LastSyncronization = syncDate
+            };
+            context.Sincronizations.Add(syncRecord);
+        }
         await context.SaveChangesAsync();
     }
 }

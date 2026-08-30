@@ -1,7 +1,8 @@
-﻿using IntegradorApi.Data.Enums;
+using IntegradorApi.Data.Enums;
 using IntegradorApi.Data.Models;
 using IntegradorApi.Data.Services;
 using IntegradorApi.Sync.Interfaces;
+using IntegradorApi.Sync.Services.Api;
 using IntegradorApi.Sync.Services.Data;
 using Serilog;
 
@@ -16,26 +17,40 @@ public class SyncOrchestrator {
         _logger = logger;
     }
 
-    private SyncServiceBase<T>? GetService<T>(Connection connection) where T : Entity {
+    private List<ISyncRunner> GetServices(Connection connection) {
         switch (connection.TypeConnection) {
             case ConnectionType.MYSQL:
                 return connection.TypeIntegration switch {
-                    IntegrationType.MANGA_EXTRACTOR => new MangaDataSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.NOVEL_EXTRACTOR => new NovelDataSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.DECKSUBTITLE => new DeckSubtitleDataSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.COMICINFO => new ComicInfoDataSyncService(connection, _logger) as SyncServiceBase<T>,
-                    _ => throw new InvalidOperationException("Integração ainda não impementada."),
+                    IntegrationType.MANGA_EXTRACTOR => new List<ISyncRunner> { new MangaDataSyncService(connection, _logger) },
+                    IntegrationType.NOVEL_EXTRACTOR => new List<ISyncRunner> { new NovelDataSyncService(connection, _logger) },
+                    IntegrationType.DECKSUBTITLE => new List<ISyncRunner> { new DeckSubtitleDataSyncService(connection, _logger) },
+                    IntegrationType.COMICINFO => new List<ISyncRunner> { new ComicInfoDataSyncService(connection, _logger) },
+                    _ => new List<ISyncRunner>(),
                 };
             case ConnectionType.APIREST:
                 return connection.TypeIntegration switch {
-                    IntegrationType.MANGA_EXTRACTOR => new MangaApiSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.NOVEL_EXTRACTOR => new NovelApiSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.DECKSUBTITLE => new DeckSubtitleApiSyncService(connection, _logger) as SyncServiceBase<T>,
-                    IntegrationType.COMICINFO => new ComicInfoApiSyncService(connection, _logger) as SyncServiceBase<T>,
-                    _ => throw new InvalidOperationException("Integração ainda não impementada."),
+                    IntegrationType.MANGA_EXTRACTOR => new List<ISyncRunner> { new MangaApiSyncService(connection, _logger) },
+                    IntegrationType.NOVEL_EXTRACTOR => new List<ISyncRunner> { new NovelApiSyncService(connection, _logger) },
+                    IntegrationType.DECKSUBTITLE => new List<ISyncRunner> { new DeckSubtitleApiSyncService(connection, _logger) },
+                    IntegrationType.COMICINFO => new List<ISyncRunner> { new ComicInfoApiSyncService(connection, _logger) },
+                    IntegrationType.TEXTO_JAPONES => new List<ISyncRunner> {
+                        new VocabularioJaponesApiSyncService(connection, _logger),
+                        new RevisarJaponesApiSyncService(connection, _logger),
+                        new KanjiInfoApiSyncService(connection, _logger),
+                        new KanjaxPtApiSyncService(connection, _logger),
+                        new ExclusaoJaponesApiSyncService(connection, _logger),
+                        new EstatisticaJaponesApiSyncService(connection, _logger)
+                    },
+                    IntegrationType.TEXTO_INGLES => new List<ISyncRunner> {
+                        new VocabularioInglesApiSyncService(connection, _logger),
+                        new RevisarInglesApiSyncService(connection, _logger),
+                        new ExclusaoInglesApiSyncService(connection, _logger),
+                        new ValidoInglesApiSyncService(connection, _logger)
+                    },
+                    _ => new List<ISyncRunner>(),
                 };
             default:
-                throw new InvalidOperationException("Conexão com banco ainda não impementado.");
+                throw new InvalidOperationException("Conexão com banco ainda não implementada.");
         }
     }
 
@@ -57,49 +72,19 @@ public class SyncOrchestrator {
                 continue;
             }
 
-            try {
-                var originService = GetService<Entity>(connectionOrigin);
-                var destinationServices = destinationsForOrigin.Select(dest => GetService<Entity>(dest))
-                                            .Where(service => service != null)
-                                            .Cast<ISyncService<Entity>>()
-                                            .ToList();
+            var originServices = GetServices(connectionOrigin);
+            if (!originServices.Any()) continue;
 
-                if (originService == null || !destinationServices.Any())
-                    continue;
+            var destinationServicesList = destinationsForOrigin.SelectMany(dest => GetServices(dest)).ToList();
 
-                await RunSyncForConnectionAsync(originService, destinationServices, connectionOrigin);
-            } catch (Exception ex) {
-                _logger.Error(ex, "Falha crítica ao sincronizar a conexão {Description}", connectionOrigin.Description);
+            foreach (var originService in originServices) {
+                try {
+                    await originService.RunSyncAsync(destinationServicesList, connectionOrigin, _databaseService, _logger);
+                } catch (Exception ex) {
+                    _logger.Error(ex, "Erro ao sincronizar recurso {ResourceName} para a conexão {Description}", originService.ResourceName, connectionOrigin.Description);
+                }
             }
         }
         _logger.Information("Orquestrador de sincronização finalizado.");
-    }
-
-    /// <summary>
-    /// O método genérico que executa o fluxo de sincronização para uma conexão.
-    /// </summary>
-    private async Task RunSyncForConnectionAsync<T>(ISyncService<T> serviceOrigin, List<ISyncService<T>> serviceDestinations, Connection connection) where T : Entity {
-        _logger.Information("Processando conexão: {Description}", connection.Description);
-
-        DateTime lastSyncDate = await _databaseService.GetLastSyncDateAsync(connection.Id);
-        DateTime sinc = DateTime.UtcNow;
-
-        async Task HandlePage(List<T> pageToSave, String extra) {
-            foreach (var destinationService in serviceDestinations) {
-                _logger.Information("Enviando registros para {Description}", destinationService.Description);
-                await destinationService.SaveAsync(pageToSave, extra);
-            }
-
-            if (connection.Delete) {
-                _logger.Information("Deletando registros de {Description}", serviceOrigin.Description);
-                await serviceOrigin.DeleteAsync(pageToSave, extra);
-            }
-        }
-
-        await serviceOrigin.GetAsync(lastSyncDate, HandlePage);
-
-        await _databaseService.UpdateLastSyncDateAsync(connection.Id, sinc);
-
-        _logger.Information("--------------------------------------------------------------------------------");
     }
 }

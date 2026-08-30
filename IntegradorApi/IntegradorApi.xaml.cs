@@ -67,6 +67,11 @@ namespace IntegradorApi {
       _appWindow = AppWindow.GetFromWindowId(windowId);
 
       TrayMenuFlyout.XamlRoot = this.Content.XamlRoot;
+      foreach (var item in TrayMenuFlyout.Items) {
+        if (item is Control control) {
+          control.RequestedTheme = ElementTheme.Dark;
+        }
+      }
       MyTaskbarIcon.DataContext = this;
 
       LogEventBus.OnLogReceived += AppendLogToUI;
@@ -108,19 +113,25 @@ namespace IntegradorApi {
     }
 
     private void ButtonClick_MinimizeToTray(object sender, RoutedEventArgs e) {
-      this.Hide();
+      _appWindow.Hide();
       MyTaskbarIcon.Visibility = Visibility.Visible;
     }
 
     private void Click_RestoreWindow(object sender, RoutedEventArgs e) {
       Serilog.Log.Information("Comando Restaurar Janela chamado.");
-      this.Show();
-      MyTaskbarIcon.Visibility = Visibility.Collapsed;
+      DispatcherQueue.TryEnqueue(() => {
+        _appWindow.Show();
+        this.Activate();
+        MyTaskbarIcon.Visibility = Visibility.Collapsed;
+      });
     }
 
     private void Click_ExitApp(object sender, RoutedEventArgs e) {
       Serilog.Log.Information("Comando Fechar Aplicação chamado.");
-      Application.Current.Exit();
+      DispatcherQueue.TryEnqueue(() => {
+        MyTaskbarIcon.Dispose();
+        Application.Current.Exit();
+      });
     }
 
     private void Click_CancelConnection(object sender, RoutedEventArgs e) {

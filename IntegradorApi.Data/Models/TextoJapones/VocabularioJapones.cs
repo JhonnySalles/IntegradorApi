@@ -1,14 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IntegradorApi.Data.Models.TextoJapones;
 
 [Table("vocabulario")]
-public class VocabularioJapones {
+public class VocabularioJapones : Entity {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Column("id", TypeName = "varchar(36)")]
-    public Guid Id { get; set; }
+    public new Guid Id { get; set; }
 
     [Required]
     [StringLength(250)]
